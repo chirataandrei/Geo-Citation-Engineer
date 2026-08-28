@@ -1,0 +1,8 @@
+interface:
+  display_name: GEO Citation Engineer
+  short_description: Find AI citation gaps and rewrite pages for GEO
+  brand_color: "#0F766E"
+  default_prompt: "Use $geo-citation-engineer. I will provide a search query, brand name, optional competitor, optional G2 product URL, and a draft page. Fetch live AI Overview citations, report the citation gap, rewrite the draft with atomic GEO facts, then run evals."
+
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,58 @@
+{
+  "query": "best crm for startups",
+  "brand": "Acme",
+  "competitor": "HubSpot",
+  "ai_overview_text": "HubSpot is a frequent pick for early-stage teams. Salesforce fits larger revenue orgs. 64% of compared buyers started on a free CRM tier. Pipedrive is cited for simple pipelines. Acme is not mentioned in this overview.",
+  "cited_sources": [
+    {
+      "title": "The Best CRM Software We've Tested for 2026 | PCMag",
+      "url": "https://www.pcmag.com/picks/the-best-crm-software",
+      "snippet": "HubSpot offers a fairly full-featured Smart CRM at no cost for up to two users."
+    },
+    {
+      "title": "Salesforce CRM",
+      "url": "https://www.salesforce.com/crm/",
+      "snippet": "Salesforce is the enterprise standard for extensible CRM."
+    },
+    {
+      "title": "Pipedrive — sales CRM",
+      "url": "https://www.pipedrive.com/",
+      "snippet": "A drag-and-drop pipeline that sales reps use daily."
+    }
+  ],
+  "organic": [
+    {
+      "title": "HubSpot CRM",
+      "url": "https://www.hubspot.com/products/crm",
+      "snippet": "Free CRM for growing companies."
+    },
+    {
+      "title": "Best CRMs for startups — Forbes",
+      "url": "https://www.forbes.com/advisor/business/software/best-crm-for-small-business/",
+      "snippet": "Roundup covering HubSpot, Zoho, and Pipedrive."
+    }
+  ],
+  "people_also_ask": [
+    "What is the best free CRM for a 10-person startup?",
+    "HubSpot vs Pipedrive for early sales teams",
+    "When should a startup switch from spreadsheets to CRM?"
+  ],
+  "related_queries": [
+    "best crm for small business 2026",
+    "crm with free tier startups"
+  ],
+  "brand_mentioned_in_ai": false,
+  "competitor_mentioned_in_ai": true,
+  "gap": "competitor cited; brand absent",
+  "fan_out": [
+    "What is the best free CRM for a 10-person startup?",
+    "HubSpot vs Pipedrive for early sales teams",
+    "When should a startup switch from spreadsheets to CRM?",
+    "best crm for small business 2026",
+    "crm with free tier startups"
+  ],
+  "quotes": [],
+  "source": "fixture",
+  "fetched_at": "2026-08-28T12:00:00+00:00",
+  "raw_item_count": 1
+}
