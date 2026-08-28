@@ -43,38 +43,48 @@ Paste into Codex: `fixtures/demo_prompt.txt`, or `python demo.py --print-prompt`
 ## Layout
 
 ```
-.agents/skills/geo-citation-engineer/   Codex-discoverable skill
+.agents/skills/geo-citation-engineer/   portable skill (copy this folder)
   SKILL.md
-  agents/openai.yaml
+  requirements.txt                      live Apify + LLM judges
+  fixtures/                             offline SERP, G2, draft, rewrite
   scripts/                              execute these; do not load them into context
   references/geo_rules.md
   assets/geo_report_template.md
-fixtures/                               offline SERP, G2, draft, rewrite
+fixtures/                               same samples at repo root for tests
 ```
 
-## Setup
+## Setup (clean machine)
 
-Python 3.11+.
+Python 3.11+. From a clone of this repo:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 cp .env.example .env
-# set APIFY_TOKEN for live fetches
+# set APIFY_TOKEN for live fetches; optional GEMINI_API_KEY for the judge
+python demo.py --auto --judge heuristic --no-web
 ```
 
-Codex loads skills from `.agents/skills` in this repo automatically.
+Offline fetch/eval needs **no pip packages** — only Python 3.11+.
 
-To install elsewhere:
+The skill folder is self-contained. Install it on another agent without the rest of the repo:
 
 ```bash
 # Codex (user scope)
 cp -R .agents/skills/geo-citation-engineer "$HOME/.agents/skills/geo-citation-engineer"
+cd "$HOME/.agents/skills/geo-citation-engineer"
+python3 scripts/apify_fetcher.py --offline --query "best crm for startups" --brand Acme --competitor HubSpot
+
+# Live Apify / LLM judge on that machine
+python3 -m pip install -r requirements.txt
+cp .env.example .env
 
 # Claude Code
 cp -R .agents/skills/geo-citation-engineer ".claude/skills/geo-citation-engineer"
 ```
+
+Codex loads skills from `.agents/skills` in this repo automatically.
 
 ## Run (offline demo — no Apify credits)
 

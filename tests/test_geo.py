@@ -144,3 +144,81 @@ def test_stage_demo_writes_show_html(monkeypatch: pytest.MonkeyPatch) -> None:
     board = (ROOT / "demo" / "show.html").read_text(encoding="utf-8")
     assert "competitor cited" in board
     assert "PASS" in board
+
+
+def test_skill_runs_when_copied_alone(tmp_path: Path) -> None:
+    import os
+    import shutil
+    import subprocess
+
+    src = ROOT / ".agents" / "skills" / "geo-citation-engineer"
+    dest = tmp_path / "geo-citation-engineer"
+    shutil.copytree(src, dest)
+    env = {key: value for key, value in os.environ.items() if key != "PYTHONPATH"}
+    fetcher = subprocess.run(
+        [
+            sys.executable,
+            str(dest / "scripts" / "apify_fetcher.py"),
+            "--offline",
+            "--query",
+            "best crm for startups",
+            "--brand",
+            "Acme",
+            "--competitor",
+            "HubSpot",
+            "--out",
+            "serp.json",
+        ],
+        cwd=dest,
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
+    assert fetcher.returncode == 0, fetcher.stderr + fetcher.stdout
+    payload = json.loads((dest / "serp.json").read_text(encoding="utf-8"))
+    assert payload["competitor_mentioned_in_ai"] is True
+    assert payload["brand_mentioned_in_ai"] is False
+
+    compliance = subprocess.run(
+        [
+            sys.executable,
+            str(dest / "scripts" / "geo_compliance.py"),
+            "--rewrite",
+            "fixtures/rewrite.md",
+            "--source",
+            "serp.json",
+        ],
+        cwd=dest,
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
+    assert compliance.returncode == 0, compliance.stderr + compliance.stdout
+    assert json.loads(compliance.stdout)["pass"] is True
+
+    judged = subprocess.run(
+        [
+            sys.executable,
+            str(dest / "scripts" / "eval_judge.py"),
+            "--offline",
+            "--judge",
+            "heuristic",
+            "--query",
+            "best crm for startups",
+            "--rewrite",
+            "fixtures/rewrite.md",
+            "--source",
+            "serp.json",
+            "--original-draft",
+            "fixtures/draft.md",
+        ],
+        cwd=dest,
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
+    assert judged.returncode == 0, judged.stderr + judged.stdout
+    assert json.loads(judged.stdout)["pass"] is True

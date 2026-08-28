@@ -2,20 +2,61 @@
 name: geo-citation-engineer
 description: Automates Generative Engine Optimization (GEO). Fetches live AI-search citations via Apify, finds citation gaps vs competitors, and rewrites first-party content with atomic facts, statistics, lists, and customer quotes. Use when the user wants GEO analysis, AI Overview / ChatGPT / Perplexity visibility, citation gap analysis, or to rewrite a page so LLMs cite it.
 license: MIT
-compatibility: Requires Python 3.11+ and a valid APIFY_TOKEN for live fetches. Offline fixtures work without Apify.
+compatibility: Python 3.11+. Offline fetch/eval is stdlib-only. Live Apify and LLM judges need `pip install -r requirements.txt` plus APIFY_TOKEN / GEMINI_API_KEY.
 ---
 
 # GEO Citation Engineer
 
 Turn a GTM keyword + brand draft into a citation-gap report and a GEO-rewritten page. Follow this workflow exactly. Do not invent statistics, quotes, or sources.
 
-For a live 2.5-minute demo from the repo root, execute `python demo.py` (Enter between beats) or `python demo.py --auto`. Do not open script source.
+This folder is the whole skill. Copy it onto a clean machine and run the scripts from here. Do not assume a git checkout of the demo repo.
+
+## Install (clean environment)
+
+Python 3.11+ on PATH. Then copy this directory:
+
+```bash
+mkdir -p "$HOME/.agents/skills"
+cp -R geo-citation-engineer "$HOME/.agents/skills/geo-citation-engineer"
+cd "$HOME/.agents/skills/geo-citation-engineer"
+```
+
+Claude Code:
+
+```bash
+cp -R geo-citation-engineer ".claude/skills/geo-citation-engineer"
+cd .claude/skills/geo-citation-engineer
+```
+
+Offline demo (no pip, no tokens):
+
+```bash
+python3 scripts/apify_fetcher.py --offline \
+  --query "best crm for startups" --brand Acme --competitor HubSpot --out serp.json
+python3 scripts/geo_compliance.py --rewrite fixtures/rewrite.md --source serp.json
+python3 scripts/eval_judge.py --offline --judge heuristic \
+  --query "best crm for startups" --rewrite fixtures/rewrite.md \
+  --source serp.json --original-draft fixtures/draft.md
+```
+
+Live fetch / LLM judge — once per machine:
+
+```bash
+python3 -m pip install -r requirements.txt
+cp .env.example .env
+# set APIFY_TOKEN and optional GEMINI_API_KEY
+```
+
+`.env` is read from the working directory, this skill folder, or a parent folder.
+
+For the 2.5-minute stage demo from the Skillathon repo root, execute `python demo.py` (Enter between beats) or `python demo.py --auto`. Do not open script source.
 
 ## Checklist
 
 Copy and tick as you go:
 
 ```
+- [ ] Skill directory is the cwd (or script paths below are used as written)
 - [ ] Inputs collected (query, brand, draft, optional competitor/G2 URL)
 - [ ] apify_fetcher.py executed (do not read the script)
 - [ ] references/geo_rules.md read
@@ -43,27 +84,19 @@ If anything required is missing, ask once, then stop.
 
 ## Step 2 — Fetch live signals
 
-Execute the fetcher. Do **not** open or rewrite `scripts/apify_fetcher.py`. Stdout is the only source of truth.
-
-From the repository root:
+Execute the fetcher from **this skill directory**. Do **not** open or rewrite `scripts/apify_fetcher.py`. Stdout is the only source of truth.
 
 ```bash
-python .agents/skills/geo-citation-engineer/scripts/apify_fetcher.py \
+python3 scripts/apify_fetcher.py \
   --query "QUERY" \
   --brand "BRAND" \
   --competitor "COMPETITOR" \
   --g2-url "G2_URL"
 ```
 
-From this skill directory:
-
-```bash
-python scripts/apify_fetcher.py --query "QUERY" --brand "BRAND"
-```
-
 Flags:
 
-- `--offline` — use `fixtures/serp_sample.json` (and optional G2 fixture). Use this if `APIFY_TOKEN` is missing or a live run times out.
+- `--offline` — use bundled `fixtures/serp_sample.json` (and G2 fixture). Use this if `APIFY_TOKEN` is missing or a live run times out.
 - `--out PATH` — write JSON to disk as well as stdout.
 
 Save the JSON. If the process exits non-zero, show stderr and stop.
@@ -74,7 +107,7 @@ Only after JSON is in hand, read [references/geo_rules.md](references/geo_rules.
 
 ## Step 4 — Write the GTM artifact
 
-Copy [assets/geo_report_template.md](assets/geo_report_template.md) to a working file (for example `output/geo-report.md`). Fill every section.
+Copy [assets/geo_report_template.md](assets/geo_report_template.md) to a working file (for example `geo-report.md`). Fill every section.
 
 Hard constraints:
 
@@ -89,17 +122,17 @@ Hard constraints:
 Deterministic (always):
 
 ```bash
-python .agents/skills/geo-citation-engineer/scripts/geo_compliance.py \
-  --rewrite output/geo-report.md \
-  --source output/serp.json
+python3 scripts/geo_compliance.py \
+  --rewrite geo-report.md \
+  --source serp.json
 ```
 
 LLM-as-a-judge (Anthropic, else Gemini via `GEMINI_API_KEY`, else OpenAI, else heuristic). Force Gemini with `--judge gemini`.
 
 ```bash
-python .agents/skills/geo-citation-engineer/scripts/eval_judge.py \
-  --rewrite output/geo-report.md \
-  --source output/serp.json \
+python3 scripts/eval_judge.py \
+  --rewrite geo-report.md \
+  --source serp.json \
   --query "QUERY" \
   --original-draft path/to/draft.md
 ```
@@ -115,4 +148,4 @@ If `groundedness` fails or `geo_compliance.pass` is false:
 
 ## Demo notes
 
-Live path needs `APIFY_TOKEN`. If the Actor is slow, rerun the fetcher with `--offline` so the rest of the demo still shows gap JSON, rewrite, and evals.
+Live path needs `APIFY_TOKEN` and `pip install -r requirements.txt`. If the Actor is slow, rerun the fetcher with `--offline` so the rest of the demo still shows gap JSON, rewrite, and evals.

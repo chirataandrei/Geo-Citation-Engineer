@@ -6,7 +6,7 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
 WORD_RE = re.compile(r"[A-Za-z0-9']+")
@@ -15,24 +15,42 @@ LIST_RE = re.compile(r"(?m)^\s*(?:[-*•]|\d+[.)])\s+\S")
 QUOTE_RE = re.compile(r"[“”\"']([^“”\"']{8,240})[“”\"']")
 
 
+def skill_dir() -> Path:
+    """Directory that contains SKILL.md — works even when the skill is copied alone."""
+    return Path(__file__).resolve().parents[1]
+
+
 def repo_root() -> Path:
     here = Path(__file__).resolve()
     for candidate in [here, *here.parents]:
-        if (candidate / "fixtures").is_dir() and (candidate / "LICENSE").is_file():
+        if (candidate / "demo.py").is_file() and (candidate / "submission.json").is_file():
             return candidate
         if (candidate / ".agents" / "skills" / "geo-citation-engineer" / "SKILL.md").is_file() and (
             candidate / "README.md"
         ).is_file():
             return candidate
-    return here.parents[4]
+    return skill_dir()
 
 
-def skill_dir() -> Path:
-    return Path(__file__).resolve().parents[1]
+def fixture_file(name: str) -> Path:
+    """Resolve an offline fixture. Skill copy first, then git-repo fixtures/."""
+    relative = Path(name)
+    if relative.is_absolute() and relative.is_file():
+        return relative
+    filename = relative.name if relative.parts[0] == "fixtures" else relative
+    if relative.parts[:1] == ("fixtures",) and len(relative.parts) > 1:
+        filename = Path(*relative.parts[1:])
+    skill_hit = skill_dir() / "fixtures" / filename
+    if skill_hit.is_file():
+        return skill_hit
+    cwd_hit = Path.cwd() / relative
+    if cwd_hit.is_file():
+        return cwd_hit
+    repo_hit = repo_root() / "fixtures" / filename
+    return repo_hit
 
 
-def load_dotenv() -> None:
-    path = repo_root() / ".env"
+def _parse_dotenv(path: Path) -> None:
     if not path.is_file():
         return
     for raw in path.read_text(encoding="utf-8").splitlines():
@@ -44,6 +62,29 @@ def load_dotenv() -> None:
         value = value.strip().strip("'").strip('"')
         if key and key not in os.environ:
             os.environ[key] = value
+
+
+def load_dotenv() -> None:
+    seen: set[Path] = set()
+    candidates = [
+        Path(os.environ["GEO_DOTENV"]) if os.environ.get("GEO_DOTENV") else None,
+        Path.cwd() / ".env",
+        skill_dir() / ".env",
+        repo_root() / ".env",
+    ]
+    here = Path.cwd()
+    for parent in [here, *here.parents]:
+        candidates.append(parent / ".env")
+        if len(candidates) > 12:
+            break
+    for path in candidates:
+        if path is None:
+            continue
+        resolved = path.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        _parse_dotenv(path)
 
 
 def read_json(path: Path) -> Any:

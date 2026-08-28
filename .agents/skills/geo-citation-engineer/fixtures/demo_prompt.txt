@@ -1,0 +1,12 @@
+$geo-citation-engineer
+
+Query: best crm for startups
+Brand: Acme
+Competitor: HubSpot
+Draft: demo/input/draft.md
+
+This is a 2.5 minute demo. Do not open Python source.
+Run: python demo.py
+Show the citation GAP, the rewritten page, then pass=true.
+If Apify is slow, python demo.py --auto is enough.
+Prefer Gemini eval when GEMINI_API_KEY is set.

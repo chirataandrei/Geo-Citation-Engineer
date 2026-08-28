@@ -13,11 +13,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from geo_lib import (
     clip_quote,
+    fixture_file,
     gap_verdict,
     load_dotenv,
     mentioned,
     read_json,
-    repo_root,
+    skill_dir,
     write_json,
 )
 
@@ -271,7 +272,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--fixture",
         default=None,
-        help="Normalized or raw SERP JSON for --offline (default: fixtures/serp_sample.json)",
+        help="Normalized or raw SERP JSON for --offline (default: skill fixtures/serp_sample.json)",
     )
     parser.add_argument(
         "--g2-fixture",
@@ -285,11 +286,12 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     load_dotenv()
     args = parse_args()
-    root = repo_root()
     quotes: list[dict[str, Any]] = []
 
     if args.offline:
-        fixture_path = root / (args.fixture or "fixtures/serp_sample.json")
+        fixture_path = Path(args.fixture) if args.fixture else fixture_file("serp_sample.json")
+        if args.fixture and not fixture_path.is_file():
+            fixture_path = fixture_file(args.fixture)
         if not fixture_path.is_file():
             print(f"offline fixture not found: {fixture_path}", file=sys.stderr)
             return 1
@@ -309,7 +311,9 @@ def main() -> int:
                 quotes=[],
                 source="offline-raw",
             )
-        g2_path = root / (args.g2_fixture or "fixtures/g2_sample.json")
+        g2_path = Path(args.g2_fixture) if args.g2_fixture else fixture_file("g2_sample.json")
+        if args.g2_fixture and not g2_path.is_file():
+            g2_path = fixture_file(args.g2_fixture)
         if args.g2_url or args.g2_fixture or g2_path.is_file():
             if g2_path.is_file():
                 reviews = read_json(g2_path)
@@ -327,7 +331,8 @@ def main() -> int:
         try:
             from apify_client import ApifyClient
         except ImportError:
-            print("Install dependencies: pip install -r requirements.txt", file=sys.stderr)
+            req = skill_dir() / "requirements.txt"
+            print(f"Install dependencies: python3 -m pip install -r {req}", file=sys.stderr)
             return 1
         client = ApifyClient(token)
         try:

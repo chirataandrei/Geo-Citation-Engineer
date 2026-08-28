@@ -1,0 +1,24 @@
+[
+  {
+    "reviewId": "fixture-acme-1",
+    "title": "Replaced our spreadsheet in a week",
+    "nps": 9,
+    "starRating": 5,
+    "reviewText": "Acme replaced our spreadsheet in one week. Onboarding took our five-person team one afternoon. Pipeline views finally match how we sell.",
+    "reviewerName": "Lina K.",
+    "helpfulVotes": 14,
+    "productName": "Acme",
+    "url": "https://www.g2.com/products/acme/reviews/fixture-acme-1"
+  },
+  {
+    "reviewId": "fixture-acme-2",
+    "title": "Cleaner than the big suites",
+    "nps": 8,
+    "starRating": 5,
+    "reviewText": "Cleaner than HubSpot for a seed-stage team. We shipped our first forecast without extra seats.",
+    "reviewerName": "Omar R.",
+    "helpfulVotes": 7,
+    "productName": "Acme",
+    "url": "https://www.g2.com/products/acme/reviews/fixture-acme-2"
+  }
+]
