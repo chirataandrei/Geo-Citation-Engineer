@@ -13,6 +13,7 @@ import sys
 import threading
 import time
 import webbrowser
+from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -22,13 +23,48 @@ sys.path.insert(0, str(SCRIPTS))
 from eval_judge import select_judge_provider  # noqa: E402
 from geo_lib import load_dotenv, section_named  # noqa: E402
 
-QUERY = "best crm for startups"
-BRAND = "Acme"
-COMPETITOR = "HubSpot"
+DEFAULT_QUERY = "best crm for startups"
+DEFAULT_BRAND = "Acme"
+DEFAULT_COMPETITOR = "HubSpot"
 TEAL = "#0F766E"
-DRAFT_PATH = ROOT / "demo" / "input" / "draft.md"
+SEED_PATH = ROOT / "demo" / "seed-prompt.md"
 REWRITE_PATH = ROOT / "demo" / "output" / "geo-report.md"
 SHOW_PATH = ROOT / "demo" / "show.html"
+
+
+@dataclass
+class Run:
+    query: str
+    brand: str
+    competitor: str
+    draft_path: Path
+
+
+def parse_seed(path: Path) -> dict[str, str]:
+    if not path.is_file():
+        return {}
+    found: dict[str, str] = {}
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        if ":" not in raw:
+            continue
+        key, _, value = raw.partition(":")
+        label = key.strip().lower()
+        text = value.strip()
+        if label in {"query", "brand", "competitor", "draft"} and text:
+            found[label] = text
+    return found
+
+
+def resolve_run(args: argparse.Namespace) -> Run:
+    seed = parse_seed(SEED_PATH)
+    query = args.query or seed.get("query") or DEFAULT_QUERY
+    brand = args.brand or seed.get("brand") or DEFAULT_BRAND
+    competitor = args.competitor or seed.get("competitor") or DEFAULT_COMPETITOR
+    draft_raw = args.draft or seed.get("draft") or "demo/input/draft.md"
+    draft_path = Path(draft_raw)
+    if not draft_path.is_absolute():
+        draft_path = ROOT / draft_path
+    return Run(query=query, brand=brand, competitor=competitor, draft_path=draft_path)
 
 
 def _tty() -> bool:
@@ -89,11 +125,12 @@ def excerpt(text: str, limit: int = 420) -> str:
     return compact[: limit - 1].rstrip() + "…"
 
 
-def highlight_geo(text: str) -> str:
+def highlight_geo(text: str, brand: str) -> str:
     out = []
+    needle = brand.lower()
     for line in text.splitlines():
         low = line.lower()
-        if "64%" in line or "lina k" in low or "replaced our spreadsheet" in low:
+        if "%" in line or '"' in line or "'" in line or needle in low:
             out.append(bright(line))
         else:
             out.append(line)
@@ -148,7 +185,7 @@ def run_script_spin(name: str, args: list[str], auto: bool, label: str) -> subpr
         thread.join(timeout=0.4)
 
 
-def print_banner() -> None:
+def print_banner(run: Run) -> None:
     width = max(56, min(_cols() - 2, 72))
     inner = "GEO  ·  citation engineer"
     pad = max(0, width - 4 - len(inner))
@@ -157,18 +194,21 @@ def print_banner() -> None:
     print(bold("│  " + inner + " " * pad + "│"))
     print(bold("└" + "─" * (width - 2) + "┘"))
     print()
-    print(f"  {dim('query')}   {QUERY}")
-    print(f"  {dim('fight')}   {bold(BRAND)}  vs  {COMPETITOR}")
+    print(f"  {dim('query')}   {run.query}")
+    print(f"  {dim('fight')}   {bold(run.brand)}  vs  {run.competitor}")
     print()
     print(dim("  Make first-party pages get cited in AI Overviews."))
 
 
-def beat_draft(auto: bool) -> str:
+def beat_draft(auto: bool, run: Run) -> str:
     print()
     print(bold("  01  INVISIBLE"))
     print(dim("  ────────────────────────────────────────"))
     print()
-    draft = DRAFT_PATH.read_text(encoding="utf-8")
+    if not run.draft_path.is_file():
+        print(red(f"  draft not found: {run.draft_path}"))
+        raise SystemExit(1)
+    draft = run.draft_path.read_text(encoding="utf-8")
     for line in excerpt(draft, 480).splitlines():
         print(red("  " + line))
     print()
@@ -177,7 +217,7 @@ def beat_draft(auto: bool) -> str:
     return draft
 
 
-def beat_fetch(auto: bool, live: bool) -> dict:
+def beat_fetch(auto: bool, live: bool, run: Run) -> dict:
     print()
     print(bold("  02  THE ENGINE ALREADY PICKED A WINNER"))
     print(dim("  ────────────────────────────────────────"))
@@ -186,11 +226,11 @@ def beat_fetch(auto: bool, live: bool) -> dict:
     out.parent.mkdir(parents=True, exist_ok=True)
     cmd = [
         "--query",
-        QUERY,
+        run.query,
         "--brand",
-        BRAND,
+        run.brand,
         "--competitor",
-        COMPETITOR,
+        run.competitor,
         "--out",
         str(out),
     ]
@@ -204,9 +244,12 @@ def beat_fetch(auto: bool, live: bool) -> dict:
         print(proc.stderr or proc.stdout)
         if live:
             print(dim("  live failed — falling back offline"))
-            return beat_fetch(auto, live=False)
+            return beat_fetch(auto, live=False, run=run)
         raise SystemExit(proc.returncode)
     payload = json.loads(out.read_text(encoding="utf-8"))
+    demo_serp = ROOT / "demo" / "output" / "serp.json"
+    demo_serp.parent.mkdir(parents=True, exist_ok=True)
+    demo_serp.write_text(out.read_text(encoding="utf-8"), encoding="utf-8")
     overview = (payload.get("ai_overview_text") or "").strip()
     print()
     print(cyan("  AI Overview"))
@@ -215,14 +258,14 @@ def beat_fetch(auto: bool, live: bool) -> dict:
     brand_hit = bool(payload.get("brand_mentioned_in_ai"))
     competitor_hit = bool(payload.get("competitor_mentioned_in_ai"))
     gap = str(payload.get("gap") or "?")
-    acme = green("cited") if brand_hit else red("not cited")
-    hub = green("cited") if competitor_hit else red("not cited")
+    brand_status = green("cited") if brand_hit else red("not cited")
+    comp_status = green("cited") if competitor_hit else red("not cited")
     gap_col = red(gap) if "absent" in gap.lower() else green(gap)
     print()
     print(bold("  GAP"))
-    print(f"  ACME        {acme}")
-    print(f"  HUBSPOT     {hub}")
-    print(f"  VERDICT     {gap_col}")
+    print(f"  {run.brand.upper():<12} {brand_status}")
+    print(f"  {run.competitor.upper():<12} {comp_status}")
+    print(f"  {'VERDICT':<12} {gap_col}")
     fan = payload.get("fan_out") or []
     if fan:
         print()
@@ -233,14 +276,34 @@ def beat_fetch(auto: bool, live: bool) -> dict:
     return payload
 
 
-def beat_rewrite(auto: bool) -> str:
+def beat_rewrite(auto: bool, run: Run, draft: str) -> str:
     print()
     print(bold("  03  THE PAGE BUILT TO GET STOLEN"))
     print(dim("  ────────────────────────────────────────"))
     print()
+    source = ROOT / "output" / "serp.json"
+    proc = run_script_spin(
+        "geo_rewrite.py",
+        [
+            "--source",
+            str(source),
+            "--draft",
+            str(run.draft_path),
+            "--brand",
+            run.brand,
+            "--competitor",
+            run.competitor,
+            "--out",
+            str(REWRITE_PATH),
+        ],
+        auto,
+        "writing GEO page…",
+    )
+    if proc.returncode != 0:
+        print(proc.stderr or proc.stdout)
+        raise SystemExit(proc.returncode or 1)
     rewrite = REWRITE_PATH.read_text(encoding="utf-8")
     body = section_named(rewrite, "Rewritten page") or rewrite
-    draft = DRAFT_PATH.read_text(encoding="utf-8")
     width = _cols()
     if width >= 100:
         left_w = max(36, (width - 8) // 2)
@@ -255,13 +318,13 @@ def beat_rewrite(auto: bool) -> str:
             right = right_lines[i] if i < len(right_lines) else ""
             right_pad = right[:right_w].ljust(right_w)
             low = right.lower()
-            if "64%" in right or "lina k" in low or "replaced our spreadsheet" in low:
+            if "%" in right or '"' in right or run.brand.lower() in low:
                 right_pad = bright(right_pad)
             print(f"  {dim(left[:left_w].ljust(left_w))}  {right_pad}")
     else:
-        print(highlight_geo("\n".join("  " + line for line in excerpt(body, 720).splitlines())))
+        print(highlight_geo("\n".join("  " + line for line in excerpt(body, 720).splitlines()), run.brand))
     print()
-    print(green("  64% sourced  ·  list  ·  G2 quote  ·  fan-out H2s"))
+    print(green("  sourced facts  ·  list  ·  fan-out H2s  ·  brand-matched quotes"))
     wait(auto)
     return body
 
@@ -287,7 +350,7 @@ def animate_bar(name: str, value: float, auto: bool) -> None:
     sys.stdout.write("\n")
 
 
-def beat_eval(auto: bool, judge: str) -> dict:
+def beat_eval(auto: bool, judge: str, run: Run) -> dict:
     print()
     print(bold("  04  PROOF"))
     print(dim("  ────────────────────────────────────────"))
@@ -295,13 +358,13 @@ def beat_eval(auto: bool, judge: str) -> dict:
     print(dim(f"  judge    {judge}"))
     args = [
         "--query",
-        QUERY,
+        run.query,
         "--rewrite",
         str(REWRITE_PATH),
         "--source",
         str(ROOT / "output" / "serp.json"),
         "--original-draft",
-        str(DRAFT_PATH),
+        str(run.draft_path),
         "--judge",
         judge,
     ]
@@ -346,7 +409,7 @@ def beat_close(passed: bool, opened: bool) -> None:
     print()
 
 
-def render_show_html(payload: dict, judged: dict, draft: str, rewrite_body: str) -> str:
+def render_show_html(payload: dict, judged: dict, draft: str, rewrite_body: str, run: Run) -> str:
     gap = html.escape(str(payload.get("gap") or ""))
     brand_hit = bool(payload.get("brand_mentioned_in_ai"))
     competitor_hit = bool(payload.get("competitor_mentioned_in_ai"))
@@ -357,7 +420,7 @@ def render_show_html(payload: dict, judged: dict, draft: str, rewrite_body: str)
     compliance = judged.get("geo_compliance") or {}
     passed = bool(judged.get("pass"))
     pill_class = "bad" if "absent" in gap.lower() else "ok"
-    acme_cls = "ok" if brand_hit else "bad"
+    brand_cls = "ok" if brand_hit else "bad"
     hub_cls = "ok" if competitor_hit else "bad"
 
     def pct(key: str, blob: dict) -> int:
@@ -436,14 +499,14 @@ def render_show_html(payload: dict, judged: dict, draft: str, rewrite_body: str)
   <header>
     <div>
       <strong>GEO CITATION ENGINEER</strong>
-      <h1>{html.escape(QUERY)}</h1>
+      <h1>{html.escape(run.query)}</h1>
     </div>
     <div class="pill {pill_class}">{gap}</div>
   </header>
   <p class="overview">{overview}</p>
   <div class="cite">
-    <div><em>ACME</em><span class="{acme_cls}-t">{"cited" if brand_hit else "not cited"}</span></div>
-    <div><em>HUBSPOT</em><span class="{hub_cls}-t">{"cited" if competitor_hit else "not cited"}</span></div>
+    <div><em>{html.escape(run.brand.upper())}</em><span class="{brand_cls}-t">{"cited" if brand_hit else "not cited"}</span></div>
+    <div><em>{html.escape(run.competitor.upper())}</em><span class="{hub_cls}-t">{"cited" if competitor_hit else "not cited"}</span></div>
   </div>
   <div class="row">
     <article class="card before"><h2>CURRENT PAGE</h2><div>{draft_h}</div></article>
@@ -460,8 +523,10 @@ def render_show_html(payload: dict, judged: dict, draft: str, rewrite_body: str)
 """
 
 
-def write_show(payload: dict, judged: dict, draft: str, rewrite_body: str, open_browser: bool) -> bool:
-    SHOW_PATH.write_text(render_show_html(payload, judged, draft, rewrite_body), encoding="utf-8")
+def write_show(
+    payload: dict, judged: dict, draft: str, rewrite_body: str, open_browser: bool, run: Run
+) -> bool:
+    SHOW_PATH.write_text(render_show_html(payload, judged, draft, rewrite_body, run), encoding="utf-8")
     fallback = ROOT / "demo" / "output" / "show.html"
     fallback.parent.mkdir(parents=True, exist_ok=True)
     fallback.write_text(SHOW_PATH.read_text(encoding="utf-8"), encoding="utf-8")
@@ -485,6 +550,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--web", dest="web", action="store_true", help="Write and open HTML board.")
     parser.add_argument("--no-web", dest="web", action="store_false", help="Skip HTML / browser.")
     parser.set_defaults(web=True)
+    parser.add_argument("--query", default=None, help="Overrides Query: in demo/seed-prompt.md")
+    parser.add_argument("--brand", default=None, help="Overrides Brand: in demo/seed-prompt.md")
+    parser.add_argument("--competitor", default=None, help="Overrides Competitor: in demo/seed-prompt.md")
+    parser.add_argument("--draft", default=None, help="Overrides Draft: in demo/seed-prompt.md")
     parser.add_argument("--print-prompt", action="store_true")
     return parser.parse_args()
 
@@ -497,18 +566,19 @@ def main() -> int:
         return 0
 
     judge = select_judge_provider(args.judge)
-    print_banner()
+    run = resolve_run(args)
+    print_banner(run)
     wait(args.auto)
-    draft = beat_draft(args.auto)
-    payload = beat_fetch(args.auto, live=args.live)
-    rewrite_body = beat_rewrite(args.auto)
-    judged = beat_eval(args.auto, judge=judge)
+    draft = beat_draft(args.auto, run)
+    payload = beat_fetch(args.auto, live=args.live, run=run)
+    rewrite_body = beat_rewrite(args.auto, run, draft)
+    judged = beat_eval(args.auto, judge=judge, run=run)
     (ROOT / "demo" / "output").mkdir(parents=True, exist_ok=True)
     (ROOT / "demo" / "output" / "eval.json").write_text(
         json.dumps(judged, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     if args.web:
-        write_show(payload, judged, draft, rewrite_body, open_browser=True)
+        write_show(payload, judged, draft, rewrite_body, open_browser=True, run=run)
     beat_close(bool(judged.get("pass")), args.web)
     return 0 if judged.get("pass") else 2
 

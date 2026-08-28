@@ -12,7 +12,7 @@ Paste [demo/seed-prompt.md](demo/seed-prompt.md) into Codex. That is the whole r
 python3 demo.py --auto --judge heuristic
 ```
 
-No venv, no pip, no API keys. Python 3 is enough.
+The driver reads Query, Brand, Competitor, and Draft from [demo/seed-prompt.md](demo/seed-prompt.md). Change those lines (or pass `--brand` / `--competitor`) for another company. No venv, no pip, no API keys. Python 3 is enough.
 
 If the live run fails or takes more than 60 seconds, open:
 

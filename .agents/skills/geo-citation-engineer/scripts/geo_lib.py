@@ -203,6 +203,21 @@ def gap_verdict(brand: str, competitor: str | None, brand_hit: bool, competitor_
     return "brand absent from AI overview"
 
 
+def quote_matches_brand(quote: dict[str, Any], brand: str) -> bool:
+    needle = (brand or "").strip().lower()
+    if len(needle) < 2:
+        return False
+    product = str(quote.get("product") or quote.get("productName") or "")
+    text = str(quote.get("quote") or quote.get("reviewText") or "")
+    reviewer = str(quote.get("reviewer") or quote.get("reviewerName") or "")
+    blob = f"{product} {text} {reviewer}"
+    return needle in blob.lower()
+
+
+def quotes_for_brand(quotes: Iterable[dict[str, Any]], brand: str) -> list[dict[str, Any]]:
+    return [row for row in quotes if isinstance(row, dict) and quote_matches_brand(row, brand)]
+
+
 def clip_quote(text: str, min_words: int = 6, max_words: int = 15) -> str | None:
     for sentence in split_sentences(text):
         words = tokenize_words(sentence)

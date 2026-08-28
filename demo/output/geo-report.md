@@ -7,10 +7,10 @@ Fetched: 2026-08-28T12:00:00+00:00
 ## Citation gap
 
 - Verdict: competitor cited; brand absent
-- Brand mentioned in AI Overview: false
-- Competitor mentioned in AI Overview: true
+- Brand mentioned in AI Overview: False
+- Competitor mentioned in AI Overview: True
 
-Google's AI Overview names HubSpot for startups. It does not cite Acme.
+The AI Overview names HubSpot. It does not cite Acme.
 
 ## Sources the engine already cites
 
@@ -28,42 +28,36 @@ Google's AI Overview names HubSpot for startups. It does not cite Acme.
 
 ## Rewritten page
 
-Acme is a first-party CRM for seed-stage teams.
+Acme is a first-party page for best crm for startups.
 64% of compared buyers started on a free CRM tier.
 
-HubSpot is the overview's default startup pick.
-Salesforce is framed for larger revenue orgs.
-Pipedrive is cited for simple pipelines.
+HubSpot is named in the AI Overview.
 Acme is absent from that AI Overview.
+The citation gap is competitor cited; brand absent.
 
 ### What is the best free CRM for a 10-person startup?
 
-Pick a tool the whole team can adopt this week.
-Acme replaced our spreadsheet in one week.
+Cover What is the best free CRM for a 10-person startup?.
 
-- Free-tier entry is the pattern 64% of buyers followed.
-- Acme targets a 10-person sales pod, not an enterprise suite.
-- HubSpot remains the cited two-user free option.
+- 64% of compared buyers started on a free CRM tier.
+- HubSpot remains the cited default pick.
+- Acme targets this query, not a generic essay.
 
 ### HubSpot vs Pipedrive for early sales teams
 
-HubSpot is cited for a generous free CRM.
-Pipedrive is cited for drag-and-drop pipelines.
-Acme sits in that same early-team slot.
-
-Lina K. on G2: "Acme replaced our spreadsheet in one week."
+Cover HubSpot vs Pipedrive for early sales teams.
 
 ### When should a startup switch from spreadsheets to CRM?
 
-Switch when forecasts cannot be rebuilt from a sheet.
-Atomic pipeline objects beat tab-sprawl.
+Cover When should a startup switch from spreadsheets to CRM?.
+
+Lina K. on G2: "Acme replaced our spreadsheet in one week"
 
 ## Change log
 
 | Change | JSON field | Notes |
 | --- | --- | --- |
 | Gap verdict | gap | competitor cited; brand absent |
-| 64% free-tier stat | ai_overview_text | Copied; not invented |
-| HubSpot / Salesforce / Pipedrive claims | ai_overview_text, cited_sources | Only names present in JSON |
-| G2 quote | quotes | 6–15 word span |
+| Sourced claims | ai_overview_text, cited_sources | Copied; not invented |
 | Fan-out H2s | fan_out | PAA and related queries |
+| G2 quote | quotes | Brand-matched span only |

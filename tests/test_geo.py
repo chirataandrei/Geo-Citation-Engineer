@@ -222,3 +222,43 @@ def test_skill_runs_when_copied_alone(tmp_path: Path) -> None:
     )
     assert judged.returncode == 0, judged.stderr + judged.stdout
     assert json.loads(judged.stdout)["pass"] is True
+
+
+def test_geo_rewrite_passes_compliance_for_default_fixture() -> None:
+    from geo_rewrite import render_report
+
+    source = read_json(ROOT / "fixtures" / "serp_sample.json")
+    quotes = quotes_from_reviews(read_json(ROOT / "fixtures" / "g2_sample.json"))
+    source = attach_mentions({**source, "quotes": quotes}, "Acme", "HubSpot")
+    report = render_report(source, "Acme", "HubSpot")
+    result = evaluate(report, source)
+    assert result["pass"], json.dumps(result, indent=2)
+
+
+def test_stage_demo_veridion_labels_skip_acme_quote() -> None:
+    import subprocess
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "demo.py"),
+            "--auto",
+            "--judge",
+            "heuristic",
+            "--no-web",
+            "--brand",
+            "Veridion",
+            "--competitor",
+            "HubSpot",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert "VERIDION" in result.stdout
+    assert "HUBSPOT" in result.stdout
+    report = (ROOT / "demo" / "output" / "geo-report.md").read_text(encoding="utf-8")
+    assert "Veridion" in report
+    assert "replaced our spreadsheet" not in report.lower()

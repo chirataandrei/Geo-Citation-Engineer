@@ -17,6 +17,7 @@ from geo_lib import (
     gap_verdict,
     load_dotenv,
     mentioned,
+    quotes_for_brand,
     read_json,
     skill_dir,
     write_json,
@@ -318,7 +319,7 @@ def main() -> int:
             if g2_path.is_file():
                 reviews = read_json(g2_path)
                 if isinstance(reviews, list):
-                    quotes = quotes_from_reviews(reviews)
+                    quotes = quotes_for_brand(quotes_from_reviews(reviews), args.brand)
         payload["quotes"] = quotes
         if args.competitor is not None or "brand" not in payload:
             payload = attach_mentions(payload, args.brand, args.competitor)
@@ -366,7 +367,7 @@ def main() -> int:
         if args.g2_url:
             try:
                 reviews = fetch_g2(client, args.g2_url)
-                quotes = quotes_from_reviews(reviews)
+                quotes = quotes_for_brand(quotes_from_reviews(reviews), args.brand)
             except Exception as extra:  # noqa: BLE001
                 print(f"G2 fetch skipped: {extra}", file=sys.stderr)
                 quotes = []

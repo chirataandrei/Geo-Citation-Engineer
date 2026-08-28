@@ -8,7 +8,7 @@
   },
   "claims": [
     {
-      "claim": "Acme is a first-party CRM for seed-stage teams.",
+      "claim": "Acme is a first-party page for best crm for startups.",
       "supported": true,
       "evidence": "qualitative; no invented number"
     },
@@ -18,17 +18,7 @@
       "evidence": "number in SOURCE_JSON"
     },
     {
-      "claim": "HubSpot is the overview's default startup pick.",
-      "supported": true,
-      "evidence": "qualitative; no invented number"
-    },
-    {
-      "claim": "Salesforce is framed for larger revenue orgs.",
-      "supported": true,
-      "evidence": "qualitative; no invented number"
-    },
-    {
-      "claim": "Pipedrive is cited for simple pipelines.",
+      "claim": "HubSpot is named in the AI Overview.",
       "supported": true,
       "evidence": "qualitative; no invented number"
     },
@@ -38,32 +28,42 @@
       "evidence": "qualitative; no invented number"
     },
     {
-      "claim": "Pick a tool the whole team can adopt this week.",
+      "claim": "The citation gap is competitor cited; brand absent.",
       "supported": true,
       "evidence": "qualitative; no invented number"
     },
     {
-      "claim": "Acme replaced our spreadsheet in one week.",
-      "supported": true,
-      "evidence": "qualitative; no invented number"
-    },
-    {
-      "claim": "Free-tier entry is the pattern 64% of buyers followed.",
+      "claim": "Cover What is the best free CRM for a 10-person startup?.",
       "supported": true,
       "evidence": "number in SOURCE_JSON"
     },
     {
-      "claim": "Acme targets a 10-person sales pod, not an enterprise suite.",
+      "claim": "64% of compared buyers started on a free CRM tier.",
       "supported": true,
       "evidence": "number in SOURCE_JSON"
     },
     {
-      "claim": "HubSpot remains the cited two-user free option.",
+      "claim": "HubSpot remains the cited default pick.",
       "supported": true,
       "evidence": "qualitative; no invented number"
     },
     {
-      "claim": "HubSpot is cited for a generous free CRM.",
+      "claim": "Acme targets this query, not a generic essay.",
+      "supported": true,
+      "evidence": "qualitative; no invented number"
+    },
+    {
+      "claim": "Cover HubSpot vs Pipedrive for early sales teams.",
+      "supported": true,
+      "evidence": "qualitative; no invented number"
+    },
+    {
+      "claim": "Cover When should a startup switch from spreadsheets to CRM?.",
+      "supported": true,
+      "evidence": "qualitative; no invented number"
+    },
+    {
+      "claim": "Lina K.",
       "supported": true,
       "evidence": "qualitative; no invented number"
     }
@@ -72,14 +72,14 @@
   "geo_compliance": {
     "geo_compliance_score": 1.0,
     "pass": true,
-    "sentence_count": 18,
+    "sentence_count": 13,
     "target_length_ratio": 1.0,
     "over_hard_max": [],
     "checks": [
       {
         "name": "sentences_present",
         "pass": true,
-        "detail": "18 prose sentences",
+        "detail": "13 prose sentences",
         "weight": 0.1
       },
       {

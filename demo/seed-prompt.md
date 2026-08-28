@@ -9,6 +9,8 @@ Draft: demo/input/draft.md
 
 Run: python3 demo.py --auto --judge heuristic
 
-Show the GAP stamp (Acme not cited, HubSpot cited), the GEO rewrite, four bars, PASS, then demo/show.html.
+The driver reads Query / Brand / Competitor / Draft from this file. Change those lines for another brand.
+
+Show the GAP stamp (brand vs competitor), the GEO rewrite, four bars, PASS, then demo/show.html.
 
 If that fails or takes more than 60 seconds, open demo/output/show.html and demo/output/geo-report.md. Stop.

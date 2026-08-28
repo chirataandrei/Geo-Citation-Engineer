@@ -35,9 +35,11 @@ Offline demo (no pip, no tokens):
 ```bash
 python3 scripts/apify_fetcher.py --offline \
   --query "best crm for startups" --brand Acme --competitor HubSpot --out serp.json
-python3 scripts/geo_compliance.py --rewrite fixtures/rewrite.md --source serp.json
+python3 scripts/geo_rewrite.py \
+  --source serp.json --draft fixtures/draft.md --brand Acme --competitor HubSpot --out geo-report.md
+python3 scripts/geo_compliance.py --rewrite geo-report.md --source serp.json
 python3 scripts/eval_judge.py --offline --judge heuristic \
-  --query "best crm for startups" --rewrite fixtures/rewrite.md \
+  --query "best crm for startups" --rewrite geo-report.md \
   --source serp.json --original-draft fixtures/draft.md
 ```
 
@@ -110,6 +112,14 @@ Only after JSON is in hand, read [references/geo_rules.md](references/geo_rules.
 ## Step 4 — Write the GTM artifact
 
 Copy [assets/geo_report_template.md](assets/geo_report_template.md) to a working file (for example `geo-report.md`). Fill every section.
+
+Or generate a grounded draft from the JSON (stdlib, no invented stats):
+
+```bash
+python3 scripts/geo_rewrite.py \
+  --source serp.json --draft path/to/draft.md \
+  --brand "BRAND" --competitor "COMPETITOR" --out geo-report.md
+```
 
 Hard constraints:
 

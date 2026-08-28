@@ -59,6 +59,14 @@
       "star_rating": 5,
       "source_url": "https://www.g2.com/products/acme/reviews/fixture-acme-1",
       "product": "Acme"
+    },
+    {
+      "quote": "Cleaner than HubSpot for a seed stage team",
+      "reviewer": "Omar R.",
+      "nps": 8,
+      "star_rating": 5,
+      "source_url": "https://www.g2.com/products/acme/reviews/fixture-acme-2",
+      "product": "Acme"
     }
   ],
   "source": "fixture",
