@@ -381,11 +381,20 @@ def parse_ddg_html(html: str) -> list[dict[str, str]]:
     return parser.results
 
 
+def ddg_html_blocked(html: str) -> bool:
+    text = html or ""
+    return "anomaly-modal" in text or "result__a" not in text
+
+
 def fetch_ddg_html(query: str, timeout: float = DDG_TIMEOUT_SECS) -> str:
     params = urlencode({"q": query})
     request = Request(
         f"{DDG_HTML_URL}?{params}",
-        headers={"User-Agent": DDG_USER_AGENT, "Accept": "text/html"},
+        headers={
+            "User-Agent": DDG_USER_AGENT,
+            "Accept": "text/html",
+            "Referer": "https://html.duckduckgo.com/",
+        },
         method="GET",
     )
     with urlopen(request, timeout=timeout) as response:
@@ -423,6 +432,25 @@ def build_ddg_payload(query: str, brand: str, competitor: str | None, html: str)
     if not payload.get("organic") and not payload.get("ai_overview_text"):
         return None
     return payload
+
+
+def build_unavailable_payload(query: str, brand: str, competitor: str | None, reason: str) -> dict[str, Any]:
+    """Keep the requested query when live HTML is blocked. Do not load the CRM fixture."""
+    overview = f"No live organic results were returned for {query}."
+    item = {
+        "aiOverview": {"text": overview, "sources": []},
+        "organicResults": [],
+        "peopleAlsoAsk": [query] if query else [],
+        "relatedQueries": [],
+    }
+    return build_payload(
+        query=query,
+        brand=brand,
+        competitor=competitor,
+        serp_items=[item],
+        quotes=[],
+        source=f"unavailable:{reason}",
+    )
 
 
 def parse_args() -> argparse.Namespace:
@@ -551,6 +579,9 @@ def fetch_ddg_payload(args: argparse.Namespace) -> dict[str, Any] | None:
     except Exception as exc:  # noqa: BLE001 — network/timeout must fall back
         print(f"DuckDuckGo HTML fetch failed: {exc}", file=sys.stderr)
         return None
+    if ddg_html_blocked(html):
+        print("DuckDuckGo HTML returned a challenge or no results.", file=sys.stderr)
+        return None
     payload = build_ddg_payload(args.query, args.brand, args.competitor, html)
     if payload is None:
         print("DuckDuckGo HTML returned no organic results.", file=sys.stderr)
@@ -579,12 +610,8 @@ def main() -> int:
     else:
         payload = fetch_ddg_payload(args)
         if payload is None:
-            print("Falling back to offline fixture.", file=sys.stderr)
-            try:
-                payload = load_offline_payload(args)
-            except FileNotFoundError as exc:
-                print(str(exc), file=sys.stderr)
-                return 1
+            print("DuckDuckGo unavailable — staying on this query (not the CRM fixture).", file=sys.stderr)
+            payload = build_unavailable_payload(args.query, args.brand, args.competitor, "ddg-empty")
 
     # Keep stdout JSON-only for the agent.
     if not payload.get("ai_overview_text"):

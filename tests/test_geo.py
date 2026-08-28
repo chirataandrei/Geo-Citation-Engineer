@@ -68,6 +68,23 @@ def test_parse_ddg_html_skips_ads_and_unwraps_urls() -> None:
     assert payload["organic"]
 
 
+def test_ddg_anomaly_html_has_no_results() -> None:
+    from apify_fetcher import build_ddg_payload, build_unavailable_payload, ddg_html_blocked
+
+    html = '<html><div class="anomaly-modal__title">Unfortunately, bots use DuckDuckGo too.</div></html>'
+    assert ddg_html_blocked(html) is True
+    assert build_ddg_payload("best bicycle bells for quiet librarians", "Dingwell", "Schwinn", html) is None
+    payload = build_unavailable_payload(
+        "best bicycle bells for quiet librarians", "Dingwell", "Schwinn", "ddg-empty"
+    )
+    blob = json.dumps(payload)
+    assert payload["query"] == "best bicycle bells for quiet librarians"
+    assert payload["source"] == "unavailable:ddg-empty"
+    assert "HubSpot" not in blob
+    assert "64%" not in blob
+    assert "bicycle bells" in payload["ai_overview_text"]
+
+
 def test_normalize_raw_serp() -> None:
     raw = read_json(ROOT / "fixtures" / "serp_raw.json")
     payload = build_payload(

@@ -245,12 +245,24 @@ def beat_fetch(auto: bool, run: Run, *, live: bool = False, offline: bool = Fals
     proc = run_script_spin("apify_fetcher.py", cmd, auto, "pulling signal…")
     if proc.returncode != 0:
         print(proc.stderr or proc.stdout)
-        if not offline:
+        if live:
             print(dim("  live failed — falling back to fixture"))
             return beat_fetch(auto, run, live=False, offline=True)
-        raise SystemExit(proc.returncode)
-    payload = json.loads(out.read_text(encoding="utf-8"))
+        if not offline:
+            print(dim("  fetch failed — staying on this query"))
+            from apify_fetcher import build_unavailable_payload
+
+            payload = build_unavailable_payload(run.query, run.brand, run.competitor, "fetcher-exit")
+            out.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        else:
+            raise SystemExit(proc.returncode)
+    else:
+        payload = json.loads(out.read_text(encoding="utf-8"))
     source = str(payload.get("source") or "")
+    err = (proc.stderr or "").strip()
+    if err and source != "duckduckgo-html":
+        for line in err.splitlines()[-6:]:
+            print(dim("  " + line))
     if source:
         print(dim(f"  source   {source}"))
     demo_serp = ROOT / "demo" / "output" / "serp.json"
@@ -540,7 +552,10 @@ def write_show(
         return False
     if os.environ.get("GEO_DEMO_NO_OPEN"):
         return False
-    webbrowser.open(SHOW_PATH.resolve().as_uri())
+    try:
+        webbrowser.open(SHOW_PATH.resolve().as_uri())
+    except Exception:
+        return False
     return True
 
 
@@ -584,8 +599,7 @@ def main() -> int:
     (ROOT / "demo" / "output" / "eval.json").write_text(
         json.dumps(judged, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
-    if args.web:
-        write_show(payload, judged, draft, rewrite_body, open_browser=True, run=run)
+    write_show(payload, judged, draft, rewrite_body, open_browser=args.web, run=run)
     beat_close(bool(judged.get("pass")), args.web)
     return 0 if judged.get("pass") else 2
 

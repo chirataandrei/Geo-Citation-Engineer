@@ -100,7 +100,7 @@ python3 scripts/apify_fetcher.py \
 
 Flags:
 
-- Default (no extra flag) — DuckDuckGo HTML, stdlib, no token. Falls back to the bundled fixture on timeout or empty results.
+- Default (no extra flag) — DuckDuckGo HTML, stdlib, no token. If the HTML endpoint is blocked, keep the requested query with an empty SERP (do not load the CRM fixture).
 - `--offline` — use bundled `fixtures/serp_sample.json` (and G2 fixture).
 - `--live` — Apify Google search / AI Overview. Needs `APIFY_TOKEN` and `pip install -r requirements.txt`.
 - `--out PATH` — write JSON to disk as well as stdout.
