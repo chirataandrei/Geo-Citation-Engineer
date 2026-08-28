@@ -9,6 +9,8 @@ compatibility: Requires Python 3.11+ and a valid APIFY_TOKEN for live fetches. O
 
 Turn a GTM keyword + brand draft into a citation-gap report and a GEO-rewritten page. Follow this workflow exactly. Do not invent statistics, quotes, or sources.
 
+For a live 2.5-minute demo from the repo root, execute `python demo.py` (Enter between beats) or `python demo.py --auto`. Do not open script source.
+
 ## Checklist
 
 Copy and tick as you go:

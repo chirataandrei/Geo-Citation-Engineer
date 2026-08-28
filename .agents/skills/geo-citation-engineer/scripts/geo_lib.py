@@ -129,12 +129,25 @@ def mentioned(needle: str, haystacks: Iterable[str]) -> bool:
     needle_norm = (needle or "").strip().lower()
     if len(needle_norm) < 2:
         return False
-    blob = " ".join(h or "" for h in haystacks).lower()
-    if needle_norm in blob:
-        return True
-    compact = re.sub(r"[^a-z0-9]+", "", needle_norm)
-    blob_compact = re.sub(r"[^a-z0-9]+", "", blob)
-    return bool(compact) and compact in blob_compact
+    token = re.compile(rf"\b{re.escape(needle_norm)}\b", re.I)
+    negated = re.compile(
+        r"\b(not mentioned|no mention|is absent|are absent|not cited|isn't cited|is not cited|does not cite)\b",
+        re.I,
+    )
+    for hay in haystacks:
+        text = hay or ""
+        sentences = split_sentences(text) or [text]
+        for sentence in sentences:
+            if not token.search(sentence):
+                continue
+            if negated.search(sentence):
+                continue
+            return True
+        compact_needle = re.sub(r"[^a-z0-9]+", "", needle_norm)
+        compact_hay = re.sub(r"[^a-z0-9]+", "", text.lower())
+        if compact_needle and compact_needle in compact_hay and not negated.search(text):
+            return True
+    return False
 
 
 def gap_verdict(brand: str, competitor: str | None, brand_hit: bool, competitor_hit: bool) -> str:

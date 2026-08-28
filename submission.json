@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "team": {
+    "name": "GEO Citation Engineer",
+    "members": ["Andrei Chirata"]
+  },
+  "track": "ai-search-optimization",
+  "problem": "GTM teams lose AI-search visibility when Google AI Overviews cite competitors but not their brand; this skill fetches live citations, reports the gap, rewrites first-party pages for GEO, and returns eval scores that prove the rewrite is grounded.",
+  "entry_skill": ".agents/skills/geo-citation-engineer/SKILL.md",
+  "skills": [
+    {
+      "path": ".agents/skills/geo-citation-engineer/SKILL.md",
+      "role": "Find AI Overview citation gaps and rewrite first-party pages so generative engines can cite them"
+    }
+  ],
+  "seed_prompt": "demo/seed-prompt.md",
+  "input": "demo/input/draft.md",
+  "output": "demo/output/geo-report.md",
+  "evals": "demo/evals.md",
+  "run_sheet": "DEMO.md"
+}

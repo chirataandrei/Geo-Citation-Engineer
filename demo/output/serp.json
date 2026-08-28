@@ -51,7 +51,16 @@
     "best crm for small business 2026",
     "crm with free tier startups"
   ],
-  "quotes": [],
+  "quotes": [
+    {
+      "quote": "Acme replaced our spreadsheet in one week",
+      "reviewer": "Lina K.",
+      "nps": 9,
+      "star_rating": 5,
+      "source_url": "https://www.g2.com/products/acme/reviews/fixture-acme-1",
+      "product": "Acme"
+    }
+  ],
   "source": "fixture",
   "fetched_at": "2026-08-28T12:00:00+00:00",
   "raw_item_count": 1

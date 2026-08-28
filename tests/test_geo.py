@@ -13,12 +13,13 @@ sys.path.insert(0, str(SCRIPTS))
 from apify_fetcher import attach_mentions, build_payload, quotes_from_reviews  # noqa: E402
 from geo_compliance import evaluate  # noqa: E402
 from geo_lib import gap_verdict, mentioned, read_json, sentence_word_count, split_sentences  # noqa: E402
-from eval_judge import heuristic_judge, select_judge_provider  # noqa: E402
+from eval_judge import calibrate_scores, heuristic_judge, select_judge_provider  # noqa: E402
 
 
 def test_mention_and_gap() -> None:
     assert mentioned("HubSpot", ["HubSpot is a frequent pick"])
     assert not mentioned("Acme", ["HubSpot is a frequent pick"])
+    assert not mentioned("Acme", ["Acme is not mentioned in this overview."])
     assert gap_verdict("Acme", "HubSpot", False, True) == "competitor cited; brand absent"
 
 
@@ -93,3 +94,36 @@ def test_select_judge_prefers_gemini_without_anthropic(monkeypatch: pytest.Monke
     assert select_judge_provider("gemini") == "gemini"
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     assert select_judge_provider("auto") == "heuristic"
+
+
+def test_calibrate_scores_lifts_hedged_groundedness() -> None:
+    payload = calibrate_scores(
+        {
+            "claims": [
+                {"claim": "64% of buyers started free", "supported": True},
+                {"claim": "HubSpot is cited", "supported": True},
+            ],
+            "scores": {
+                "context_relevance": 1.0,
+                "groundedness": 0.5,
+                "answer_relevance": 0.5,
+            },
+        }
+    )
+    assert payload["scores"]["groundedness"] >= 0.9
+    assert payload["scores"]["answer_relevance"] == 0.5
+
+
+def test_stage_demo_auto_heuristic() -> None:
+    import subprocess
+
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "demo.py"), "--auto", "--judge", "heuristic"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert "GAP" in result.stdout
+    assert "PASS" in result.stdout

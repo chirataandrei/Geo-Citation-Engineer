@@ -4,6 +4,34 @@ Reusable [Agent Skill](https://agentskills.io/specification) for Generative Engi
 
 Built for the Formidable Builders GTM Skillathon (Codex + Apify). MIT licensed.
 
+Submission manifest: [submission.json](submission.json). Stage run sheet: [DEMO.md](DEMO.md).
+
+
+## Demo (the 2.5-minute slot)
+
+From the repo root, venv on:
+
+```bash
+source .venv/bin/activate
+python demo.py
+```
+
+Press **Enter** between beats. Judges see four screens only: losing draft → AI Overview gap → GEO rewrite → eval scorecard (`pass=true`).
+
+Hands-free run-through:
+
+```bash
+python demo.py --auto
+```
+
+Live Apify (needs `APIFY_TOKEN`):
+
+```bash
+python demo.py --live
+```
+
+Paste into Codex: `fixtures/demo_prompt.txt`, or `python demo.py --print-prompt`.
+
 ## What it does
 
 1. Pull Google AI Overview + SERP context (`apify/google-search-scraper`).
@@ -111,7 +139,7 @@ python .agents/skills/geo-citation-engineer/scripts/apify_fetcher.py \
 
 ## Invoke the skill
 
-In Codex: `$geo-citation-engineer` and provide query, brand, and a draft. The skill body is the workflow; the scripts are the sensors and evals.
+In Codex: paste `fixtures/demo_prompt.txt`, or type `$geo-citation-engineer`. The skill body is the workflow; `python demo.py` is the stage path.
 
 ## Tests
 

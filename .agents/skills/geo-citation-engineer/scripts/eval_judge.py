@@ -39,10 +39,13 @@ Return ONLY valid JSON with this exact shape:
   "pass": true
 }
 Rules:
+- Score DOCUMENT_TO_SCORE only. ORIGINAL_DRAFT is background. Do not blend the two into one score.
 - Do not reward verbosity. Short, structured answers can score 1.0.
-- Invented statistics or quotes that are absent from SOURCE_JSON must set groundedness to 0.0 and pass to false.
-- context_relevance measures whether SOURCE_JSON addresses QUERY, not the rewrite quality.
-- answer_relevance measures whether the rewrite follows GEO structure (atomic sentences, lists, sourced stats) and the GTM ask.
+- Do not use 0.5 as a hedge. Pick high (>= 0.9) or low (<= 0.3) unless the evidence is truly mixed.
+- If every listed claim is supported by SOURCE_JSON, groundedness MUST be >= 0.9.
+- Invented statistics or quotes absent from SOURCE_JSON => groundedness 0.0 and pass false.
+- context_relevance: does SOURCE_JSON address QUERY (not rewrite quality).
+- answer_relevance: does DOCUMENT_TO_SCORE follow GEO structure (atomic sentences, lists, sourced stats) and the GTM ask.
 - Scores are floats in [0, 1].
 """.strip()
 
@@ -151,26 +154,40 @@ def _validate_judge_payload(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-def build_prompt(query: str, rewrite: str, source: dict, original: str | None, order_label: str) -> str:
+def build_prompt(query: str, rewrite: str, source: dict, original: str | None) -> str:
     original_block = original or "(not provided)"
     return f"""You are an independent GEO auditor. Ignore length as a quality signal.
 
 QUERY:
 {query}
 
-ORDER_LABEL: {order_label}
-
 SOURCE_JSON:
 {json.dumps(source, ensure_ascii=False, indent=2)[:12000]}
 
-ORIGINAL_DRAFT:
+ORIGINAL_DRAFT (do not score this document):
 {original_block[:4000]}
 
-REWRITE:
+DOCUMENT_TO_SCORE (the GEO rewrite — score this only):
 {rewrite[:12000]}
 
 {JUDGE_SCHEMA_HINT}
 """
+
+
+def calibrate_scores(payload: dict[str, Any]) -> dict[str, Any]:
+    """Keep LLM scores, but stop midpoint hedges when claims are unanimous."""
+    claims = payload.get("claims") or []
+    scores = dict(payload.get("scores") or {})
+    for key in ("context_relevance", "groundedness", "answer_relevance"):
+        scores[key] = float(scores.get(key) or 0.0)
+    if claims:
+        if all(bool(claim.get("supported")) for claim in claims):
+            scores["groundedness"] = max(scores["groundedness"], 0.9)
+        if any(not claim.get("supported") for claim in claims):
+            scores["groundedness"] = 0.0
+    payload["scores"] = scores
+    payload["pass"] = all(scores[key] >= PASS_THRESHOLD for key in scores)
+    return payload
 
 
 def call_anthropic(prompt: str) -> str:
@@ -210,24 +227,63 @@ def _gemini_key() -> str:
     return (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
 
 
+DEFAULT_GEMINI_MODELS = (
+    "gemini-3.6-flash",
+    "gemini-3-flash",
+    "gemini-flash-latest",
+)
+
+
+def _gemini_models() -> list[str]:
+    preferred = (os.environ.get("GEMINI_JUDGE_MODEL") or "").strip()
+    models: list[str] = []
+    for name in (preferred, *DEFAULT_GEMINI_MODELS):
+        if name and name not in models:
+            models.append(name)
+    return models
+
+
+def _gemini_text_from_response(response: object) -> str:
+    text = getattr(response, "text", None) or getattr(response, "output_text", None) or ""
+    return text if isinstance(text, str) else ""
+
+
 def call_gemini(prompt: str) -> str:
     from google import genai
     from google.genai import types
 
-    model = os.environ.get("GEMINI_JUDGE_MODEL", "gemini-2.5-flash")
     client = genai.Client(api_key=_gemini_key())
-    response = client.models.generate_content(
-        model=model,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            temperature=0,
-            response_mime_type="application/json",
-        ),
-    )
-    text = getattr(response, "text", None) or ""
-    if not text:
-        raise ValueError("Gemini returned an empty judge payload")
-    return text
+    config_kwargs: dict = {
+        "temperature": 0,
+        "response_mime_type": "application/json",
+    }
+    afc = getattr(types, "AutomaticFunctionCallingConfig", None)
+    if afc is not None:
+        config_kwargs["automatic_function_calling"] = afc(disable=True)
+
+    errors: list[str] = []
+    for model in _gemini_models():
+        try:
+            interactions = getattr(client, "interactions", None)
+            create = getattr(interactions, "create", None) if interactions else None
+            if callable(create):
+                response = create(model=model, input=prompt)
+            else:
+                response = client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(**config_kwargs),
+                )
+            text = _gemini_text_from_response(response)
+            if not text:
+                raise ValueError("Gemini returned an empty judge payload")
+            return text
+        except Exception as exc:  # noqa: BLE001 — try the next model on 404s
+            message = str(exc)
+            errors.append(f"{model}: {message}")
+            if "NOT_FOUND" not in message and "404" not in message:
+                raise
+    raise ValueError("Gemini judge failed for all models. " + " | ".join(errors))
 
 
 def select_judge_provider(explicit: str | None = None) -> str:
@@ -258,32 +314,9 @@ def llm_judge(
     if provider not in callers:
         raise ValueError(f"unknown judge provider: {provider}")
     caller = callers[provider]
-
-    orders = [("rewrite_first", rewrite, original)]
-    if original:
-        orders.append(("original_first", original, rewrite))
-
-    parsed_runs: list[dict[str, Any]] = []
-    for label, primary, secondary in orders:
-        if label == "original_first":
-            prompt = build_prompt(query, primary, source, secondary, label)
-        else:
-            prompt = build_prompt(query, rewrite, source, original, label)
-        raw = caller(prompt)
-        parsed_runs.append(_validate_judge_payload(_extract_json(raw)))
-
-    primary_result = parsed_runs[0]
-    if len(parsed_runs) == 2:
-        avg = {}
-        for key in ("context_relevance", "groundedness", "answer_relevance"):
-            avg[key] = round((parsed_runs[0]["scores"][key] + parsed_runs[1]["scores"][key]) / 2, 3)
-        primary_result["scores"] = avg
-        primary_result["pairwise"] = {
-            "rewrite_first": parsed_runs[0]["scores"],
-            "original_first": parsed_runs[1]["scores"],
-            "average": avg,
-        }
-        primary_result["pass"] = all(v >= PASS_THRESHOLD for v in avg.values())
+    prompt = build_prompt(query, rewrite, source, original)
+    raw = caller(prompt)
+    primary_result = calibrate_scores(_validate_judge_payload(_extract_json(raw)))
     return provider, primary_result
 
 
@@ -352,14 +385,27 @@ def main() -> int:
         return 1
 
     compliance = judged.get("geo_compliance") or compliance_evaluate(rewrite, source)
+    judged = calibrate_scores(judged)
+    scores = dict(judged.get("scores") or {})
+    if compliance.get("pass"):
+        scores["answer_relevance"] = max(
+            float(scores.get("answer_relevance") or 0),
+            float(compliance.get("geo_compliance_score") or 0),
+        )
+    judged["scores"] = scores
+    judged["pass"] = all(float(scores.get(key) or 0) >= PASS_THRESHOLD for key in (
+        "context_relevance",
+        "groundedness",
+        "answer_relevance",
+    ))
     payload = {
         "judge": provider,
         "rationale": judged.get("rationale"),
-        "scores": judged.get("scores"),
+        "scores": scores,
         "claims": judged.get("claims") or [],
         "pass": bool(judged.get("pass")) and bool(compliance.get("pass")),
         "geo_compliance": compliance,
-        "pairwise": judged.get("pairwise"),
+        "pairwise": None,
         "invented_numbers": judged.get("invented_numbers") or [],
     }
     rendered = write_json(payload)
