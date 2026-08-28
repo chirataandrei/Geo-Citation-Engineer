@@ -92,7 +92,7 @@ python .agents/skills/geo-citation-engineer/scripts/geo_compliance.py \
   --source output/serp.json
 ```
 
-LLM-as-a-judge (Anthropic if `ANTHROPIC_API_KEY` is set, else OpenAI, else heuristic):
+LLM-as-a-judge (Anthropic, else Gemini via `GEMINI_API_KEY`, else OpenAI, else heuristic). Force Gemini with `--judge gemini`.
 
 ```bash
 python .agents/skills/geo-citation-engineer/scripts/eval_judge.py \

@@ -13,7 +13,7 @@ sys.path.insert(0, str(SCRIPTS))
 from apify_fetcher import attach_mentions, build_payload, quotes_from_reviews  # noqa: E402
 from geo_compliance import evaluate  # noqa: E402
 from geo_lib import gap_verdict, mentioned, read_json, sentence_word_count, split_sentences  # noqa: E402
-from eval_judge import heuristic_judge  # noqa: E402
+from eval_judge import heuristic_judge, select_judge_provider  # noqa: E402
 
 
 def test_mention_and_gap() -> None:
@@ -83,3 +83,13 @@ def test_sentence_split_helper() -> None:
     sentences = split_sentences("Acme ships weekly. HubSpot is cited.")
     assert len(sentences) == 2
     assert sentence_word_count(sentences[0]) == 3
+
+
+def test_select_judge_prefers_gemini_without_anthropic(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    assert select_judge_provider("auto") == "gemini"
+    assert select_judge_provider("gemini") == "gemini"
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    assert select_judge_provider("auto") == "heuristic"

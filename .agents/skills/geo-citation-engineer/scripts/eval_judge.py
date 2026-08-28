@@ -206,17 +206,65 @@ def call_openai(prompt: str) -> str:
     return response.choices[0].message.content or ""
 
 
-def llm_judge(query: str, rewrite: str, source: dict, original: str | None) -> tuple[str, dict[str, Any]]:
+def _gemini_key() -> str:
+    return (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
+
+
+def call_gemini(prompt: str) -> str:
+    from google import genai
+    from google.genai import types
+
+    model = os.environ.get("GEMINI_JUDGE_MODEL", "gemini-2.5-flash")
+    client = genai.Client(api_key=_gemini_key())
+    response = client.models.generate_content(
+        model=model,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            temperature=0,
+            response_mime_type="application/json",
+        ),
+    )
+    text = getattr(response, "text", None) or ""
+    if not text:
+        raise ValueError("Gemini returned an empty judge payload")
+    return text
+
+
+def select_judge_provider(explicit: str | None = None) -> str:
+    """Pick a judge backend. Order: explicit flag, then Anthropic, Gemini, OpenAI."""
+    if explicit and explicit != "auto":
+        return explicit
+    if os.environ.get("ANTHROPIC_API_KEY", "").strip():
+        return "anthropic"
+    if _gemini_key():
+        return "gemini"
+    if os.environ.get("OPENAI_API_KEY", "").strip():
+        return "openai"
+    return "heuristic"
+
+
+def llm_judge(
+    query: str,
+    rewrite: str,
+    source: dict,
+    original: str | None,
+    provider: str,
+) -> tuple[str, dict[str, Any]]:
+    callers = {
+        "anthropic": call_anthropic,
+        "gemini": call_gemini,
+        "openai": call_openai,
+    }
+    if provider not in callers:
+        raise ValueError(f"unknown judge provider: {provider}")
+    caller = callers[provider]
+
     orders = [("rewrite_first", rewrite, original)]
     if original:
         orders.append(("original_first", original, rewrite))
 
     parsed_runs: list[dict[str, Any]] = []
-    provider = "anthropic" if os.environ.get("ANTHROPIC_API_KEY") else "openai"
-    caller = call_anthropic if provider == "anthropic" else call_openai
-
     for label, primary, secondary in orders:
-        # For the swapped pass, put the compared docs in the same slots with a label.
         if label == "original_first":
             prompt = build_prompt(query, primary, source, secondary, label)
         else:
@@ -250,6 +298,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Skip paid LLM APIs and use the heuristic judge",
     )
+    parser.add_argument(
+        "--judge",
+        choices=("auto", "anthropic", "gemini", "openai", "heuristic"),
+        default="auto",
+        help="Judge backend. auto = Anthropic, then Gemini, then OpenAI, else heuristic.",
+    )
     parser.add_argument("--out", default=None)
     return parser.parse_args()
 
@@ -271,17 +325,21 @@ def main() -> int:
 
     provider = "heuristic"
     try:
-        use_llm = (not args.offline) and (
-            os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY")
-        )
-        if use_llm:
-            provider, judged = llm_judge(args.query, rewrite, source, original)
+        if args.offline:
+            chosen = "heuristic"
+        else:
+            chosen = select_judge_provider(args.judge)
+        if chosen == "gemini" and not _gemini_key():
+            print(
+                "GEMINI_API_KEY is not set. Create a key at https://aistudio.google.com/api-keys",
+                file=sys.stderr,
+            )
+            return 1
+        if chosen in {"anthropic", "gemini", "openai"}:
+            provider, judged = llm_judge(args.query, rewrite, source, original, chosen)
         else:
             judged = heuristic_judge(args.query, rewrite, source)
-            if not args.offline and not os.environ.get("ANTHROPIC_API_KEY") and not os.environ.get(
-                "OPENAI_API_KEY"
-            ):
-                provider = "heuristic"
+            provider = "heuristic"
     except Exception as exc:  # noqa: BLE001 — parse/API failure must not look like a pass
         print(f"judge harness error: {exc}", file=sys.stderr)
         payload = {

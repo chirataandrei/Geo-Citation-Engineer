@@ -72,7 +72,19 @@ python .agents/skills/geo-citation-engineer/scripts/eval_judge.py \
   --original-draft fixtures/draft.md
 ```
 
-`eval_judge.py` uses Anthropic when `ANTHROPIC_API_KEY` is set (preferred, cross-family vs Codex), else OpenAI, else the heuristic judge. `--offline` forces the heuristic path.
+`eval_judge.py` picks a judge in this order: Anthropic (`ANTHROPIC_API_KEY`), Gemini (`GEMINI_API_KEY` or `GOOGLE_API_KEY`), OpenAI (`OPENAI_API_KEY`), else heuristic. Force Gemini with `--judge gemini`. `--offline` skips paid APIs.
+
+Gemini key: create one at [Google AI Studio](https://aistudio.google.com/api-keys), then:
+
+```bash
+echo 'GEMINI_API_KEY=your-key' >> .env
+python .agents/skills/geo-citation-engineer/scripts/eval_judge.py \
+  --judge gemini \
+  --query "best crm for startups" \
+  --rewrite fixtures/rewrite.md \
+  --source output/serp.json \
+  --original-draft fixtures/draft.md
+```
 
 ## Live fetch
 
