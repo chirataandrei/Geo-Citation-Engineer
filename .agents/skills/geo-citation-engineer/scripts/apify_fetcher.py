@@ -271,7 +271,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--fixture",
         default=None,
-        help="Normalized or raw SERP JSON for --offline (default: fixtures/serp_sample.json)",
+        help=(
+            "Normalized or raw SERP JSON for --offline "
+            "(default: demo/input/snapshots/best-bible-study-app.2026-08-28.json)"
+        ),
     )
     parser.add_argument(
         "--g2-fixture",
@@ -289,7 +292,10 @@ def main() -> int:
     quotes: list[dict[str, Any]] = []
 
     if args.offline:
-        fixture_path = root / (args.fixture or "fixtures/serp_sample.json")
+        # Default to real captured evidence, not the synthetic unit-test fixture.
+        fixture_path = root / (
+            args.fixture or "demo/input/snapshots/best-bible-study-app.2026-08-28.json"
+        )
         if not fixture_path.is_file():
             print(f"offline fixture not found: {fixture_path}", file=sys.stderr)
             return 1
@@ -309,12 +315,16 @@ def main() -> int:
                 quotes=[],
                 source="offline-raw",
             )
-        g2_path = root / (args.g2_fixture or "fixtures/g2_sample.json")
-        if args.g2_url or args.g2_fixture or g2_path.is_file():
-            if g2_path.is_file():
-                reviews = read_json(g2_path)
-                if isinstance(reviews, list):
-                    quotes = quotes_from_reviews(reviews)
+        # Only ever load a G2 fixture that was asked for by name. Auto-loading a
+        # default would splice synthetic review quotes into a real capture.
+        if args.g2_fixture:
+            g2_path = root / args.g2_fixture
+            if not g2_path.is_file():
+                print(f"g2 fixture not found: {g2_path}", file=sys.stderr)
+                return 1
+            reviews = read_json(g2_path)
+            if isinstance(reviews, list):
+                quotes = quotes_from_reviews(reviews)
         payload["quotes"] = quotes
         if args.competitor is not None or "brand" not in payload:
             payload = attach_mentions(payload, args.brand, args.competitor)

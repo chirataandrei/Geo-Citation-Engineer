@@ -54,6 +54,11 @@ def _blob(source: dict) -> str:
         json.dumps(source.get("cited_sources") or [], ensure_ascii=False),
         json.dumps(source.get("quotes") or [], ensure_ascii=False),
         json.dumps(source.get("fan_out") or [], ensure_ascii=False),
+        json.dumps(source.get("organic") or [], ensure_ascii=False),
+        # First-party brand claims are evidence too, with their own source_url and
+        # retrieved_at. Omitting them made the judge flag legitimate brand facts as
+        # invented while geo_compliance passed the same rewrite.
+        json.dumps((source.get("brand_facts") or {}).get("claims") or [], ensure_ascii=False),
         str(source.get("gap") or ""),
     ]
     return "\n".join(parts)

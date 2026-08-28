@@ -6,11 +6,13 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
 WORD_RE = re.compile(r"[A-Za-z0-9']+")
-NUMBER_RE = re.compile(r"\b\d+(?:[.,]\d+)?%?\b")
+# No trailing \b: "40M" must yield "40", so a rewrite saying "40 million" is not
+# scored as an invented number when the source wrote "40M".
+NUMBER_RE = re.compile(r"\b\d+(?:[.,]\d+)?%?")
 LIST_RE = re.compile(r"(?m)^\s*(?:[-*•]|\d+[.)])\s+\S")
 QUOTE_RE = re.compile(r"[“”\"']([^“”\"']{8,240})[“”\"']")
 

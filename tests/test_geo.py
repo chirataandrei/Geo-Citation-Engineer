@@ -93,3 +93,126 @@ def test_select_judge_prefers_gemini_without_anthropic(monkeypatch: pytest.Monke
     assert select_judge_provider("gemini") == "gemini"
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     assert select_judge_provider("auto") == "heuristic"
+
+
+# --------------------------------------------------------------------------- #
+# run_geo orchestrator: the three decision paths and the fact-budget split
+# --------------------------------------------------------------------------- #
+
+from run_geo import (  # noqa: E402
+    allowed_facts,
+    build_evidence,
+    citing_sources,
+    classify,
+    rank_fan_out,
+)
+
+BRIEFS = ROOT / "demo" / "input"
+
+
+def _case(name: str) -> dict:
+    brief = read_json(BRIEFS / f"{name}.brief.json")
+    snapshot = read_json(ROOT / brief["snapshot"])
+    return {"brief": brief, "evidence": build_evidence(brief, snapshot)}
+
+
+def _action(name: str) -> str:
+    case = _case(name)
+    return classify(case["evidence"], allowed_facts(case["evidence"])["all_numbers"])["action"]
+
+
+def test_intended_use_detects_real_gap() -> None:
+    """Case 1: competitor in the citable set, brand absent -> rewrite."""
+    evidence = _case("bible-chat")["evidence"]
+    assert evidence["competitor_mentioned_in_ai"] is True
+    assert evidence["brand_mentioned_in_ai"] is False
+    assert evidence["gap"] == "competitor cited; brand absent"
+    assert len(citing_sources(evidence, "YouVersion")) == 3
+    assert citing_sources(evidence, "Bible Chat") == []
+    assert _action("bible-chat") == "rewrite"
+
+
+def test_thin_evidence_aborts_instead_of_inventing_a_gap() -> None:
+    """Case 2: one source, no AI Overview -> refuse to claim a gap."""
+    assert _action("thin-evidence") == "abort"
+
+
+def test_already_cited_brand_declines_rewrite() -> None:
+    """Case 3: same snapshot as case 1, brand swapped -> decline."""
+    evidence = _case("youversion-already-cited")["evidence"]
+    assert evidence["brand_mentioned_in_ai"] is True
+    assert _action("youversion-already-cited") == "decline"
+
+
+def test_same_snapshot_yields_opposite_verdicts() -> None:
+    """The verdict comes from the evidence, not from the request."""
+    a = _case("bible-chat")
+    b = _case("youversion-already-cited")
+    assert a["brief"]["snapshot"] == b["brief"]["snapshot"]
+    assert _action("bible-chat") != _action("youversion-already-cited")
+
+
+def test_reusability_new_industry_no_code_edits() -> None:
+    """A new brief in an unrelated vertical works with no code change."""
+    evidence = _case("attio")["evidence"]
+    assert evidence["gap"] == "competitor cited; brand absent"
+    assert _action("attio") == "rewrite"
+    # No first-party facts collected, so nothing is assertable about the brand.
+    assert allowed_facts(evidence)["brand_numbers"] == []
+
+
+def test_fact_budget_keeps_competitor_numbers_out_of_brand_claims() -> None:
+    """Olive Tree's 4.7 rating must never be assertable as the brand's."""
+    facts = allowed_facts(_case("bible-chat")["evidence"])
+    assert "40" in facts["brand_numbers"]
+    assert "95%" in facts["brand_numbers"]
+    assert "4.7" in facts["evidence_numbers"]
+    assert "4.7" not in facts["brand_numbers"]
+    assert "131,826" not in facts["brand_numbers"]
+    assert not set(facts["brand_numbers"]) & set(facts["evidence_numbers"])
+
+
+def test_number_extraction_survives_suffixed_magnitudes() -> None:
+    """'40M' must yield '40' so '40 million' is not scored as invented."""
+    from geo_lib import extract_numbers
+
+    assert "40" in extract_numbers("Used by over 40M Christians")
+
+
+def test_fan_out_ranking_drops_offtopic_and_duplicates() -> None:
+    evidence = _case("bible-chat")["evidence"]
+    priority = rank_fan_out(evidence["query"], evidence["fan_out"])
+    assert len(priority) == 3
+    assert "What does God say about left-handers?" not in priority
+    assert all(item in evidence["fan_out"] for item in priority)
+
+    crm = _case("attio")["evidence"]
+    crm_priority = rank_fan_out(crm["query"], crm["fan_out"])
+    token_sets = [frozenset(p.lower().split()) for p in crm_priority]
+    assert len(set(token_sets)) == len(token_sets)
+
+
+def test_committed_fallback_reports_still_pass_their_evals() -> None:
+    """demo/output/ must stay green; it is what carries the demo if Codex stalls."""
+    for name in ("bible-chat", "attio"):
+        case = _case(name)
+        report = (ROOT / "demo" / "output" / f"geo-report.{name}.md").read_text(encoding="utf-8")
+        assert "AGENT-REWRITE" not in report
+        compliance = evaluate(report, case["evidence"])
+        assert compliance["pass"], (name, compliance["checks"])
+        judged = heuristic_judge(case["evidence"]["query"], report, case["evidence"])
+        assert judged["invented_numbers"] == [], (name, judged["invented_numbers"])
+        assert judged["pass"], (name, judged["rationale"])
+
+
+def test_snapshots_carry_honest_provenance() -> None:
+    for path in sorted((BRIEFS / "snapshots").glob("*.json")):
+        prov = read_json(path).get("provenance")
+        assert prov, path
+        assert prov["method"] in {"browser_capture", "synthetic_test_fixture"}, path
+        if prov["method"] == "browser_capture":
+            assert prov["request_url"], path
+            assert prov["retrieved_at"], path
+            assert prov["verbatim"] is True, path
+        else:
+            assert prov["retrieved_at"] is None, path

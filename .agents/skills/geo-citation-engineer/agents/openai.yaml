@@ -1,8 +1,8 @@
 interface:
   display_name: GEO Citation Engineer
-  short_description: Find AI citation gaps and rewrite pages for GEO
+  short_description: Prove an AI-search citation gap, then rewrite the page to close it
   brand_color: "#0F766E"
-  default_prompt: "Use $geo-citation-engineer. I will provide a search query, brand name, optional competitor, optional G2 product URL, and a draft page. Fetch live AI Overview citations, report the citation gap, rewrite the draft with atomic GEO facts, then run evals."
+  default_prompt: "Use $geo-citation-engineer with the brief at demo/input/bible-chat.brief.json. Run the plan step, obey the action it returns, write the rewrite into the report, then run the score step and show the pass/fail table. No live fetching."
 
 policy:
   allow_implicit_invocation: true

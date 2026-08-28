@@ -1,116 +1,96 @@
 ---
 name: geo-citation-engineer
-description: Automates Generative Engine Optimization (GEO). Fetches live AI-search citations via Apify, finds citation gaps vs competitors, and rewrites first-party content with atomic facts, statistics, lists, and customer quotes. Use when the user wants GEO analysis, AI Overview / ChatGPT / Perplexity visibility, citation gap analysis, or to rewrite a page so LLMs cite it.
+description: Finds out whether a named competitor is cited by AI search for a revenue keyword while your brand is not, then rewrites one page section so your brand becomes citable. Use for citation gap analysis, Google AI Overview visibility, GEO rewrites, or "why does AI recommend our competitor and not us".
 license: MIT
-compatibility: Requires Python 3.11+ and a valid APIFY_TOKEN for live fetches. Offline fixtures work without Apify.
+compatibility: Python 3.11+. No credentials and no network needed; runs from a committed evidence snapshot. APIFY_TOKEN only enables optional live capture.
 ---
 
 # GEO Citation Engineer
 
-Turn a GTM keyword + brand draft into a citation-gap report and a GEO-rewritten page. Follow this workflow exactly. Do not invent statistics, quotes, or sources.
+## The one job
 
-## Checklist
+**User:** a content marketer at a B2B or B2C software company.
 
-Copy and tick as you go:
+**Problem:** for a keyword that drives revenue, AI search cites a named competitor and never the user's brand.
 
+**Job:** produce one citation-gap report plus one rewritten page section, with every fact traced to a captured evidence field.
+
+**Boundary:** this skill drafts copy and stops. It does not publish, touch a CMS, run keyword research, cover ChatGPT or Perplexity, or claim the rewrite will earn a citation. If asked for any of those, say it is out of scope.
+
+## Inputs
+
+One brief JSON path. Nothing else. The brief names the query, brand, competitor, evidence snapshot, draft, and first-party `brand_facts`.
+
+If the user gives a query and brand but no brief, copy `demo/input/bible-chat.brief.json`, edit the fields, and use that. If they give nothing, ask once for a brief path, then stop.
+
+## Step 1 — Plan (one command)
+
+```bash
+python .agents/skills/geo-citation-engineer/scripts/run_geo.py plan --brief demo/input/bible-chat.brief.json
 ```
-- [ ] Inputs collected (query, brand, draft, optional competitor/G2 URL)
-- [ ] apify_fetcher.py executed (do not read the script)
-- [ ] references/geo_rules.md read
-- [ ] Report written from the template
-- [ ] geo_compliance.py executed
-- [ ] eval_judge.py executed
-- [ ] If groundedness failed: strip unsourced claims and retry evals once
+
+Do not open the script. Stdout is the only source of truth. It writes a report scaffold to `output/` and prints:
+
+- `action` — `rewrite`, `decline`, or `abort`
+- `gap_verdict`, `evidence_level`, `sources_naming_competitor` of `sources_total`
+- `fan_out_priority` — the three questions to answer
+- `allowed_numbers.brand` — digits you may assert about the brand
+- `allowed_numbers.evidence` — third-party digits, quotable only with the source named in the same sentence
+- `allowed_claims` — the only first-party claims you may make
+- `constraints` — the writing rules, already inlined so you do not need another file read
+
+**Obey `action` before writing anything:**
+
+| `action` | What you do |
+|----------|-------------|
+| `rewrite` | Continue to Step 2. |
+| `decline` | The brand is already cited. Report that, show the gap table, and stop. Do not rewrite. |
+| `abort` | Evidence is too thin to claim a gap. Report that and stop. Do not rewrite, do not go looking for more evidence. |
+
+## Step 2 — Write the rewrite (one edit)
+
+Open the report at `report_path`. Replace the `AGENT-REWRITE` marker with the rewritten page. Fill the change log table underneath, naming the evidence field behind each injection.
+
+Non-negotiable, and each one is machine-checked in Step 3:
+
+- One fact per sentence, 15 words or fewer. Over 18 words is a hard fail.
+- At least one bullet list inside `## Rewritten page`.
+- An `###` heading for each question in `fan_out_priority`. Keep them inside `## Rewritten page`; a new `##` ends the scored section.
+- Every digit must appear in `allowed_numbers.all`. Anything else scores as invented and fails.
+- Numbers from `allowed_numbers.evidence` require the source named in the same sentence. Never restate a competitor's rating or download count as the brand's.
+- Invent nothing. No statistic, quote, award, or customer count outside `allowed_claims`.
+- If `allowed_numbers.brand` is empty, write qualitative atomic facts and attribute every digit you use.
+
+## Step 3 — Score (one command)
+
+```bash
+python .agents/skills/geo-citation-engineer/scripts/run_geo.py score --brief demo/input/bible-chat.brief.json
 ```
 
-## Step 1 — Collect inputs
+Runs deterministic GEO compliance and an offline heuristic RAG-triad judge. No keys, no network.
 
-Required:
+Completion criteria — report is done when all of:
 
-- Search **query** (the industry question to win in AI Overviews)
-- **Brand** name (and optional brand domain)
-- Path to the user's **draft** page or paste the draft
+- `geo_compliance.pass` is `true`
+- `judge.pass` is `true`
+- `judge.invented_numbers` is empty
+- the change log names an evidence field for every injection
 
-Optional:
+**On failure:** the output names the failing checks. Fix exactly those, once, and re-run Step 3. If it still fails, stop and report the remaining failures honestly. Never loosen a check, never edit the scripts, never delete a failing sentence's evidence to make the check pass.
 
-- **Competitor** name
-- **G2 product URL** (example: `https://www.g2.com/products/hubspot/reviews`)
-- Country / language codes (`us` / `en` defaults)
+Exit codes: `0` pass, `2` scored but failed, `1` could not run (missing file, or the marker was never replaced).
 
-If anything required is missing, ask once, then stop.
+## Optional — live capture
 
-## Step 2 — Fetch live signals
-
-Execute the fetcher. Do **not** open or rewrite `scripts/apify_fetcher.py`. Stdout is the only source of truth.
-
-From the repository root:
+Only if the user asks and `APIFY_TOKEN` is set. Costs credits and takes 30–90s, so never do this on a demo clock.
 
 ```bash
 python .agents/skills/geo-citation-engineer/scripts/apify_fetcher.py \
-  --query "QUERY" \
-  --brand "BRAND" \
-  --competitor "COMPETITOR" \
-  --g2-url "G2_URL"
+  --query "QUERY" --brand "BRAND" --competitor "COMPETITOR" --out output/serp.json
 ```
 
-From this skill directory:
+Then point a brief's `snapshot` at that file. Without a token the fetcher exits non-zero and tells you to use a snapshot; that is expected, not an error to work around.
 
-```bash
-python scripts/apify_fetcher.py --query "QUERY" --brand "BRAND"
-```
+## Reference
 
-Flags:
-
-- `--offline` — use `fixtures/serp_sample.json` (and optional G2 fixture). Use this if `APIFY_TOKEN` is missing or a live run times out.
-- `--out PATH` — write JSON to disk as well as stdout.
-
-Save the JSON. If the process exits non-zero, show stderr and stop.
-
-## Step 3 — Load GEO rules
-
-Only after JSON is in hand, read [references/geo_rules.md](references/geo_rules.md). Apply those constraints; do not add extra style essays.
-
-## Step 4 — Write the GTM artifact
-
-Copy [assets/geo_report_template.md](assets/geo_report_template.md) to a working file (for example `output/geo-report.md`). Fill every section.
-
-Hard constraints:
-
-- Every statistic, quote, and competitor claim must map to a field in the fetcher JSON (`ai_overview_text`, `cited_sources`, `organic`, `quotes`, `fan_out`).
-- If the JSON has no number, do not invent one. Write a qualitative atomic fact instead.
-- If `quotes` is empty, omit the quote block; do not fabricate reviews.
-- Cover `fan_out` items as H2s, not only the head query.
-- Change log must name the JSON field that justified each injection.
-
-## Step 5 — Evaluate
-
-Deterministic (always):
-
-```bash
-python .agents/skills/geo-citation-engineer/scripts/geo_compliance.py \
-  --rewrite output/geo-report.md \
-  --source output/serp.json
-```
-
-LLM-as-a-judge (Anthropic, else Gemini via `GEMINI_API_KEY`, else OpenAI, else heuristic). Force Gemini with `--judge gemini`.
-
-```bash
-python .agents/skills/geo-citation-engineer/scripts/eval_judge.py \
-  --rewrite output/geo-report.md \
-  --source output/serp.json \
-  --query "QUERY" \
-  --original-draft path/to/draft.md
-```
-
-Use `--offline` on the judge to skip paid LLM calls.
-
-If `groundedness` fails or `geo_compliance.pass` is false:
-
-1. Remove unsourced claims and sentences over 15 words.
-2. Rewrite once.
-3. Re-run both evals.
-4. Stop after one retry and report remaining failures.
-
-## Demo notes
-
-Live path needs `APIFY_TOKEN`. If the Actor is slow, rerun the fetcher with `--offline` so the rest of the demo still shows gap JSON, rewrite, and evals.
+Read [references/geo_rules.md](references/geo_rules.md) only if the user asks *why* a rule exists. The rules themselves are already printed by Step 1.

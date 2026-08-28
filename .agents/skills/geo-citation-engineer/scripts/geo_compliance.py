@@ -51,6 +51,7 @@ def evaluate(rewrite: str, source: dict | None) -> dict:
                     for row in (source.get("cited_sources") or []) + (source.get("organic") or [])
                 ),
                 " ".join(q.get("quote", "") for q in source.get("quotes") or []),
+                " ".join((source.get("brand_facts") or {}).get("claims") or []),
             ]
         )
         quotes_expected = source.get("quotes") or []
