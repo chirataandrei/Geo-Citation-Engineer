@@ -1,4 +1,11 @@
 {
+  "provenance": {
+    "method": "synthetic_test_fixture",
+    "captured_by": "Hand-authored unit-test data. NOT web evidence. Must never be presented as a real capture. See fixtures/README.md.",
+    "retrieved_at": null,
+    "request_url": null,
+    "verbatim": false
+  },
   "query": "best crm for startups",
   "brand": "Acme",
   "competitor": "HubSpot",
@@ -52,7 +59,7 @@
     "crm with free tier startups"
   ],
   "quotes": [],
-  "source": "fixture",
   "fetched_at": "2026-08-28T12:00:00+00:00",
-  "raw_item_count": 1
+  "raw_item_count": 1,
+  "source": "synthetic_test_fixture"
 }

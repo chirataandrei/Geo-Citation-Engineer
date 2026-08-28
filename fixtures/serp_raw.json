@@ -1,4 +1,11 @@
 {
+  "provenance": {
+    "method": "synthetic_test_fixture",
+    "captured_by": "Hand-authored unit-test data. NOT web evidence. Must never be presented as a real capture. See fixtures/README.md.",
+    "retrieved_at": null,
+    "request_url": null,
+    "verbatim": false
+  },
   "searchQuery": {
     "term": "best crm for startups",
     "device": "DESKTOP",
@@ -18,10 +25,14 @@
     }
   ],
   "peopleAlsoAsk": [
-    {"question": "What is the best free CRM for a 10-person startup?"}
+    {
+      "question": "What is the best free CRM for a 10-person startup?"
+    }
   ],
   "relatedQueries": [
-    {"title": "best crm for small business 2026"}
+    {
+      "title": "best crm for small business 2026"
+    }
   ],
   "aiOverview": {
     "text": "HubSpot is a frequent pick for early-stage teams. 64% of compared buyers started on a free CRM tier.",
@@ -32,5 +43,6 @@
         "description": "HubSpot offers a fairly full-featured Smart CRM at no cost for up to two users."
       }
     ]
-  }
+  },
+  "source": "synthetic_test_fixture"
 }
