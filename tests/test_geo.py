@@ -12,7 +12,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 from apify_fetcher import attach_mentions, build_payload, quotes_from_reviews  # noqa: E402
 from geo_compliance import evaluate  # noqa: E402
-from geo_lib import gap_verdict, mentioned, read_json, sentence_word_count, split_sentences  # noqa: E402
+from geo_lib import gap_verdict, mentioned, read_json, section_named, sentence_word_count, split_sentences  # noqa: E402
 from eval_judge import calibrate_scores, heuristic_judge, select_judge_provider  # noqa: E402
 
 
@@ -290,6 +290,18 @@ def test_geo_rewrite_keeps_draft_intent() -> None:
     assert "Nimbus pipeline for seed teams" in report
     result = evaluate(report, source)
     assert result["pass"], json.dumps(result, indent=2)
+
+
+def test_geo_rewrite_skips_draft_for_other_brand() -> None:
+    from geo_rewrite import render_report
+
+    source = read_json(ROOT / "fixtures" / "serp_sample.json")
+    source = attach_mentions(source, "Kettleghost", "Nespresso")
+    draft = "# Why Silt & Co makes calm moss lamps\n\nAquarium copy."
+    report = render_report(source, "Kettleghost", "Nespresso", draft=draft)
+    body = section_named(report, "Rewritten page") or report
+    assert "moss lamps" not in body.lower()
+    assert "Kettleghost" in body
 
 
 def test_stage_demo_veridion_labels_skip_acme_quote() -> None:

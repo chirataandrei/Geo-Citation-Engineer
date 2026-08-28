@@ -8,62 +8,62 @@
   },
   "claims": [
     {
-      "claim": "Acme is a first-party page for best crm for startups.",
+      "claim": "Silt & Co is a first-party page for best moss lamps for introverted goldfish.",
       "supported": true,
       "evidence": "qualitative; no invented number"
     },
     {
-      "claim": "Why Acme is the CRM your startup has been waiting for.",
+      "claim": "Why Silt & Co makes calm moss lamps for introverted goldfish.",
       "supported": true,
       "evidence": "qualitative; no invented number"
     },
     {
-      "claim": "64% of compared buyers started on a free CRM tier.",
+      "claim": "These plants can survive temperatures as low as 60 °F and thrive under minimal lighting.",
       "supported": true,
       "evidence": "number in SOURCE_JSON"
     },
     {
-      "claim": "HubSpot is named in the AI Overview.",
+      "claim": "AquaIkea is not named in the AI Overview.",
       "supported": true,
       "evidence": "qualitative; no invented number"
     },
     {
-      "claim": "Acme is absent from that AI Overview.",
+      "claim": "Silt & Co is absent from that AI Overview.",
       "supported": true,
       "evidence": "qualitative; no invented number"
     },
     {
-      "claim": "The citation gap is competitor cited; brand absent.",
+      "claim": "The citation gap is neither brand nor competitor cited.",
       "supported": true,
       "evidence": "qualitative; no invented number"
     },
     {
-      "claim": "Cover best crm for startups.",
+      "claim": "Cover best moss lamps for introverted goldfish.",
       "supported": true,
       "evidence": "qualitative; no invented number"
     },
     {
-      "claim": "64% of compared buyers started on a free CRM tier.",
+      "claim": "These plants can survive temperatures as low as 60 °F and thrive under minimal lighting.",
       "supported": true,
       "evidence": "number in SOURCE_JSON"
     },
     {
-      "claim": "HubSpot remains the cited default pick.",
+      "claim": "AquaIkea is also absent from this overview.",
       "supported": true,
       "evidence": "qualitative; no invented number"
     },
     {
-      "claim": "Acme targets this query, not a generic essay.",
+      "claim": "Silt & Co targets this query, not a generic essay.",
       "supported": true,
       "evidence": "qualitative; no invented number"
     },
     {
-      "claim": "Cover What is the best free CRM for a 10-person startup?.",
+      "claim": "Cover 10 Best Aquarium Moss Types for 2026 That Thrive in Any Tank.",
       "supported": true,
       "evidence": "number in SOURCE_JSON"
     },
     {
-      "claim": "Cover HubSpot vs Pipedrive for early sales teams.",
+      "claim": "Cover best moss for aquarium - Fishing And Fish.",
       "supported": true,
       "evidence": "qualitative; no invented number"
     }
@@ -72,14 +72,14 @@
   "geo_compliance": {
     "geo_compliance_score": 1.0,
     "pass": true,
-    "sentence_count": 14,
+    "sentence_count": 12,
     "target_length_ratio": 1.0,
     "over_hard_max": [],
     "checks": [
       {
         "name": "sentences_present",
         "pass": true,
-        "detail": "14 prose sentences",
+        "detail": "12 prose sentences",
         "weight": 0.1
       },
       {
@@ -103,13 +103,13 @@
       {
         "name": "sourced_statistic",
         "pass": true,
-        "detail": "shared=['10', '64'] invented=[]",
+        "detail": "shared=['10', '2026', '60'] invented=[]",
         "weight": 0.15
       },
       {
-        "name": "quote_present",
+        "name": "quote_optional",
         "pass": true,
-        "detail": "1 quoted span(s)",
+        "detail": "no G2 quotes in source JSON",
         "weight": 0.05
       }
     ]

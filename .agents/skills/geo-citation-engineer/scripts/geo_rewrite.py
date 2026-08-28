@@ -17,16 +17,27 @@ from geo_lib import (  # noqa: E402
     read_json,
     sentence_word_count,
     split_sentences,
+    tokenize_words,
 )
 
 MAX_WORDS = 15
 
 
 def cap_sentence(text: str, max_words: int = MAX_WORDS) -> str:
-    words = [part for part in (text or "").strip().split() if part]
-    if not words:
+    raw = [part for part in (text or "").strip().split() if part]
+    if not raw:
         return ""
-    clipped = " ".join(words[:max_words]).rstrip(".")
+    kept: list[str] = []
+    count = 0
+    for part in raw:
+        n = max(len(tokenize_words(part)), 1)
+        if kept and count + n > max_words:
+            break
+        kept.append(part)
+        count += n
+        if count >= max_words:
+            break
+    clipped = " ".join(kept).rstrip(".,;:—-")
     return clipped + "."
 
 
@@ -58,8 +69,8 @@ def sourced_stat_sentence(source: dict[str, Any]) -> str | None:
     return cap_sentence(f"{first} appears in the AI Overview.")
 
 
-def draft_intent_sentence(draft: str, source: dict[str, Any]) -> str | None:
-    """Keep the user's page intent. Drop sentences that invent numbers."""
+def draft_intent_sentence(draft: str, source: dict[str, Any], brand: str = "") -> str | None:
+    """Keep the user's page intent. Drop sentences that invent numbers or name another brand."""
     source_numbers = extract_numbers(source_blob(source))
     heading = None
     prose = None
@@ -73,8 +84,11 @@ def draft_intent_sentence(draft: str, source: dict[str, Any]) -> str | None:
             continue
         if prose is None:
             prose = line
+    brand_l = (brand or "").strip().lower()
     for candidate in (heading, prose):
         if not candidate:
+            continue
+        if brand_l and brand_l not in candidate.lower():
             continue
         sentence = (split_sentences(candidate) or [candidate])[0]
         if extract_numbers(sentence) - source_numbers:
@@ -100,7 +114,7 @@ def rewritten_page(
     lines: list[str] = []
 
     lines.append(cap_sentence(f"{brand} is a first-party page for {query}"))
-    intent = draft_intent_sentence(draft, source)
+    intent = draft_intent_sentence(draft, source, brand=brand)
     if intent:
         lines.append(intent)
     stat = sourced_stat_sentence(source)
@@ -149,15 +163,23 @@ def rewritten_page(
             lines.append("")
 
     body = "\n".join(lines).strip() + "\n"
-    over = [s for s in split_sentences(body) if sentence_word_count(s) > 18]
+    over = [s for s in split_sentences(body) if sentence_word_count(s) > 15]
     if over:
-        # Last-resort cap; should not fire if templates stay short.
         rebuilt = []
         for line in body.splitlines():
-            if line.startswith("#") or line.startswith("-") or not line.strip():
+            if line.startswith("#") or not line.strip():
                 rebuilt.append(line)
                 continue
-            rebuilt.append(cap_sentence(line, 15) if sentence_word_count(line) > 15 else line)
+            marker = ""
+            core = line
+            stripped = line.lstrip()
+            if stripped.startswith("- "):
+                marker = line[: len(line) - len(stripped)] + "- "
+                core = stripped[2:]
+            if sentence_word_count(core) > 15:
+                rebuilt.append(marker + cap_sentence(core, 15))
+            else:
+                rebuilt.append(line)
         body = "\n".join(rebuilt).strip() + "\n"
     return body
 
@@ -207,7 +229,7 @@ def render_report(
         "| Sourced claims | ai_overview_text, cited_sources | Copied; not invented |",
         "| Fan-out H2s | fan_out | PAA and related queries |",
     ]
-    if draft_intent_sentence(draft, source):
+    if draft_intent_sentence(draft, source, brand=brand):
         change_rows.append("| Draft intent | user draft | Capped; unsourced numbers dropped |")
     if quotes_for_brand(source.get("quotes") or [], brand):
         change_rows.append("| G2 quote | quotes | Brand-matched span only |")

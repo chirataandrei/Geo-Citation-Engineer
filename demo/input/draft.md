@@ -1,5 +1,5 @@
-# Why Acme is the CRM your startup has been waiting for
+# Why Silt & Co makes calm moss lamps for introverted goldfish
 
-In today's fast-paced world of software, it is important to note that choosing a CRM can feel overwhelming for founders who are juggling fundraising, product, and a messy spreadsheet of leads that never quite turns into a forecast.
+In today's fast-paced aquarium world, it is important to note that choosing a moss lamp can feel overwhelming for quiet fish who prefer shaded corners, soft ripples, and decor that does not turn their bowl into a spotlight.
 
-Acme is an innovative platform that empowers teams to supercharge their pipeline with synergy and next-generation workflows, unlike any other solution on the market today.
+Silt & Co is an innovative aquarium lighting studio that empowers caretakers to create gentle underwater ambience with moss-forward glow, cozy hideaway energy, and next-generation fish serenity.
