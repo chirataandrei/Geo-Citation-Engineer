@@ -162,4 +162,4 @@ If `groundedness` fails or `geo_compliance.pass` is false:
 
 ## Demo notes
 
-Default fetch is DuckDuckGo HTML (no pip). Apify needs `APIFY_TOKEN` and `pip install -r requirements.txt` (`--live`). If the network is slow, rerun with `--offline` so the rest of the demo still shows gap JSON, rewrite, and evals.
+Default fetch is DuckDuckGo HTML (no pip). Apify needs `APIFY_TOKEN` and `pip install -r requirements.txt` (`--live`). The Actor often takes 1–3 minutes; do not abort a running `--live` fetch. Use `--offline` only when you want the bundled fixture.

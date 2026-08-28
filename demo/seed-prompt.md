@@ -1,16 +1,16 @@
 $geo-citation-engineer
 
-Query: best moss lamps for introverted goldfish
-Brand: Silt & Co
-Competitor: AquaIkea
+Query: best camping stoves for windy ridge hikes
+Brand: Emberkiln
+Competitor: Jetboil
 Draft: demo/input/draft.md
 
-2.5 minute demo. Do not open Python source. Do not pip install. Do not use --live (Apify).
+Do not open Python source. Use the project venv if `.venv/bin/python` exists.
 
-Run: python3 demo.py --auto --judge heuristic --query "best moss lamps for introverted goldfish" --brand "Silt & Co" --competitor "AquaIkea"
+Run: .venv/bin/python demo.py --auto --judge heuristic --live --query "best camping stoves for windy ridge hikes" --brand Emberkiln --competitor Jetboil
 
-That hits DuckDuckGo HTML (stdlib, no token) for the query above. Change Query / Brand / Competitor / Draft for another company. If DuckDuckGo is blocked, the driver searches Wikipedia for the product topic, then keeps this query (empty live SERP) if that also fails. Use --offline only when you want the CRM fixture.
+That hits Apify Google AI Overview (`APIFY_TOKEN` from `.env`). The Actor often takes 1–3 minutes (wait cap 280s). Do not interrupt a running fetch. Do not open a previous `show.html` while it is still waiting.
 
 Show the GAP stamp (brand vs competitor), the GEO rewrite, four bars, PASS, then demo/show.html.
 
-If that fails or takes more than 60 seconds, open demo/output/show.html and demo/output/geo-report.md. Stop.
+Open demo/output/show.html only if the command exits non-zero. Do not invent a report from chat.

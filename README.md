@@ -12,9 +12,9 @@ Paste [demo/seed-prompt.md](demo/seed-prompt.md) into Codex. That is the whole r
 python3 demo.py --auto --judge heuristic
 ```
 
-The driver reads Query, Brand, Competitor, and Draft from [demo/seed-prompt.md](demo/seed-prompt.md). Change those lines (or pass `--brand` / `--competitor`) for another company. Default search is DuckDuckGo HTML (stdlib). No venv, no pip, no API keys. Python 3 is enough. `--offline` forces the fixture; `--live` is Apify.
+The driver reads Query, Brand, Competitor, and Draft from [demo/seed-prompt.md](demo/seed-prompt.md). Change those lines (or pass `--brand` / `--competitor`) for another company. Default search is DuckDuckGo HTML (stdlib). `--live` is Apify Google AI Overview (`APIFY_TOKEN` in `.env`); wait for the Actor — it often takes 1–3 minutes. `--offline` forces the fixture.
 
-If the live run fails or takes more than 60 seconds, open:
+If the command **exits non-zero**, open:
 
 - [demo/output/show.html](demo/output/show.html)
 - [demo/output/geo-report.md](demo/output/geo-report.md)
