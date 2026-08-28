@@ -7,7 +7,7 @@
   "snapshot": "demo/input/snapshots/best-crm-for-startups.2026-08-28.json",
   "draft": "demo/input/attio.draft.md",
   "brand_facts": {
-    "note": "Reusability case in a different industry. No first-party claims were collected for Attio, so brand_facts is deliberately empty: the skill must produce a qualitative rewrite with zero invented numbers. Attio is a third-party brand; the rewrite is an illustrative draft built only from public SERP evidence, not an Attio-authored or Attio-endorsed claim set.",
+    "note": "Reusability case in a different industry. No first-party claims were collected for Attio, so brand_facts is deliberately empty: the skill must produce a qualitative rewrite with zero brand statistics. Attio is a third-party brand; the rewrite is an illustrative draft built only from public SERP evidence, not Attio-authored or Attio-endorsed copy.",
     "source_url": null,
     "retrieved_at": null,
     "claims": []

@@ -1,0 +1,15 @@
+{
+  "case_id": "estateguru-already-cited",
+  "query": "best real estate crowdfunding platform europe",
+  "brand": "EstateGuru",
+  "brand_domain": "estateguru.co",
+  "competitor": "Stock.estate",
+  "snapshot": "demo/input/snapshots/best-real-estate-crowdfunding-platform-europe.2026-08-28.json",
+  "draft": null,
+  "brand_facts": {
+    "note": "Exclusion case. Same live snapshot as the stock-estate case, brand and competitor swapped. Google's AI Overview already names EstateGuru, so the correct behaviour is to decline the rewrite rather than produce one anyway.",
+    "source_url": null,
+    "retrieved_at": null,
+    "claims": []
+  }
+}

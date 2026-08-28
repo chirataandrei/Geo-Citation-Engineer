@@ -123,13 +123,15 @@ def _action(name: str) -> str:
 
 def test_intended_use_detects_real_gap() -> None:
     """Case 1: competitor in the citable set, brand absent -> rewrite."""
-    evidence = _case("bible-chat")["evidence"]
+    evidence = _case("stock-estate")["evidence"]
+    assert evidence["provenance"]["method"] == "apify_live_capture"
+    assert evidence["ai_overview_text"], "case 1 must carry verbatim AI Overview text"
+    assert "Estateguru" in evidence["ai_overview_text"]
     assert evidence["competitor_mentioned_in_ai"] is True
     assert evidence["brand_mentioned_in_ai"] is False
     assert evidence["gap"] == "competitor cited; brand absent"
-    assert len(citing_sources(evidence, "YouVersion")) == 3
-    assert citing_sources(evidence, "Bible Chat") == []
-    assert _action("bible-chat") == "rewrite"
+    assert citing_sources(evidence, "Stock.estate") == []
+    assert _action("stock-estate") == "rewrite"
 
 
 def test_thin_evidence_aborts_instead_of_inventing_a_gap() -> None:
@@ -139,17 +141,17 @@ def test_thin_evidence_aborts_instead_of_inventing_a_gap() -> None:
 
 def test_already_cited_brand_declines_rewrite() -> None:
     """Case 3: same snapshot as case 1, brand swapped -> decline."""
-    evidence = _case("youversion-already-cited")["evidence"]
+    evidence = _case("estateguru-already-cited")["evidence"]
     assert evidence["brand_mentioned_in_ai"] is True
-    assert _action("youversion-already-cited") == "decline"
+    assert _action("estateguru-already-cited") == "decline"
 
 
 def test_same_snapshot_yields_opposite_verdicts() -> None:
     """The verdict comes from the evidence, not from the request."""
-    a = _case("bible-chat")
-    b = _case("youversion-already-cited")
+    a = _case("stock-estate")
+    b = _case("estateguru-already-cited")
     assert a["brief"]["snapshot"] == b["brief"]["snapshot"]
-    assert _action("bible-chat") != _action("youversion-already-cited")
+    assert _action("stock-estate") != _action("estateguru-already-cited")
 
 
 def test_reusability_new_industry_no_code_edits() -> None:
@@ -163,12 +165,14 @@ def test_reusability_new_industry_no_code_edits() -> None:
 
 def test_fact_budget_keeps_competitor_numbers_out_of_brand_claims() -> None:
     """Olive Tree's 4.7 rating must never be assertable as the brand's."""
-    facts = allowed_facts(_case("bible-chat")["evidence"])
-    assert "40" in facts["brand_numbers"]
-    assert "95%" in facts["brand_numbers"]
-    assert "4.7" in facts["evidence_numbers"]
-    assert "4.7" not in facts["brand_numbers"]
-    assert "131,826" not in facts["brand_numbers"]
+    facts = allowed_facts(_case("stock-estate")["evidence"])
+    # Stock.estate's own published figures are assertable.
+    assert "100" in facts["brand_numbers"]
+    assert "19.9%" in facts["brand_numbers"]
+    # InRento's minimum and returns belong to InRento, not to the brand.
+    assert "500" in facts["evidence_numbers"]
+    assert "500" not in facts["brand_numbers"]
+    assert "6%" not in facts["brand_numbers"]
     assert not set(facts["brand_numbers"]) & set(facts["evidence_numbers"])
 
 
@@ -180,11 +184,12 @@ def test_number_extraction_survives_suffixed_magnitudes() -> None:
 
 
 def test_fan_out_ranking_drops_offtopic_and_duplicates() -> None:
-    evidence = _case("bible-chat")["evidence"]
+    evidence = _case("stock-estate")["evidence"]
     priority = rank_fan_out(evidence["query"], evidence["fan_out"])
     assert len(priority) == 3
-    assert "What does God say about left-handers?" not in priority
     assert all(item in evidence["fan_out"] for item in priority)
+    token_sets = [frozenset(p.lower().split()) for p in priority]
+    assert len(set(token_sets)) == len(token_sets)
 
     crm = _case("attio")["evidence"]
     crm_priority = rank_fan_out(crm["query"], crm["fan_out"])
@@ -194,7 +199,7 @@ def test_fan_out_ranking_drops_offtopic_and_duplicates() -> None:
 
 def test_committed_fallback_reports_still_pass_their_evals() -> None:
     """demo/output/ must stay green; it is what carries the demo if Codex stalls."""
-    for name in ("bible-chat", "attio"):
+    for name in ("stock-estate", "attio", "formidable-builders"):
         case = _case(name)
         report = (ROOT / "demo" / "output" / f"geo-report.{name}.md").read_text(encoding="utf-8")
         assert "AGENT-REWRITE" not in report
@@ -209,10 +214,63 @@ def test_snapshots_carry_honest_provenance() -> None:
     for path in sorted((BRIEFS / "snapshots").glob("*.json")):
         prov = read_json(path).get("provenance")
         assert prov, path
-        assert prov["method"] in {"browser_capture", "synthetic_test_fixture"}, path
-        if prov["method"] == "browser_capture":
+        assert prov["method"] in {"apify_live_capture", "synthetic_test_fixture"}, path
+        if prov["method"] == "apify_live_capture":
             assert prov["request_url"], path
             assert prov["retrieved_at"], path
             assert prov["verbatim"] is True, path
         else:
             assert prov["retrieved_at"] is None, path
+
+
+def test_uncontested_answer_is_not_dressed_up_as_a_competitor_gap() -> None:
+    """Nobody named in the overview -> uncontested_answer, not competitor_gap."""
+    case = _case("formidable-builders")
+    evidence = case["evidence"]
+    assert evidence["ai_overview_text"]
+    assert evidence["competitor_mentioned_in_ai"] is False
+    assert evidence["brand_mentioned_in_ai"] is False
+    verdict = classify(evidence, allowed_facts(evidence)["all_numbers"])
+    assert verdict["action"] == "rewrite"
+    assert verdict["opportunity"] == "uncontested_answer"
+    assert "unclaimed" in verdict["reason"]
+
+
+def test_competitor_gap_is_labelled_as_such() -> None:
+    evidence = _case("stock-estate")["evidence"]
+    verdict = classify(evidence, allowed_facts(evidence)["all_numbers"])
+    assert verdict["opportunity"] == "competitor_gap"
+
+
+def test_overview_chrome_is_stripped_from_snapshots() -> None:
+    """Google UI footers must never reach the evidence budget."""
+    from apify_fetcher import strip_overview_chrome
+
+    for path in sorted((BRIEFS / "snapshots").glob("*.json")):
+        text = read_json(path).get("ai_overview_text") or ""
+        for marker in ("AI responses may include mistakes", "AI can make mistakes",
+                       "Your feedback helps Google improve", "Save to Google Drive"):
+            assert marker not in text, (path.name, marker)
+    assert strip_overview_chrome("Real answer.AI can make mistakes, so check") == "Real answer."
+
+
+def test_citation_urls_are_resolved_not_redirect_stubs() -> None:
+    from apify_fetcher import resolve_cited_urls
+
+    for path in sorted((BRIEFS / "snapshots").glob("*.2026-08-28.json")):
+        snap = read_json(path)
+        for row in snap.get("cited_sources") or []:
+            url = row.get("url", "")
+            assert not url.startswith("/goto"), (path.name, url)
+            if url:
+                assert url.startswith("https://"), (path.name, url)
+            else:
+                assert row.get("url_note"), (path.name, "empty url needs a note")
+
+    # publisher may be the first title segment, not only the last
+    resolved = resolve_cited_urls(
+        [{"title": "BrikkApp | Invest in Real Estate", "url": "/goto?url=CAES", "snippet": ""}],
+        [{"title": "BrikkApp", "url": "https://brikkapp.com/", "snippet": ""}],
+    )
+    assert resolved[0]["url"] == "https://brikkapp.com/"
+    assert resolved[0]["url_raw"] == "/goto?url=CAES"

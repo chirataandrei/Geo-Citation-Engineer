@@ -1,6 +1,6 @@
 {
   "team": {
-    "name": "Bible Chat",
+    "name": "Stock.estate",
     "members": [
       {
         "name": "George Lazureanu",
@@ -9,8 +9,8 @@
     ]
   },
   "track": "Dominate AI search",
-  "problem": "For a keyword that drives revenue, AI search cites a named competitor and never your brand. A content marketer has no repeatable way to prove the gap, or to rewrite a page so it becomes citable without inventing statistics along the way.",
-  "job": "Given one brief, decide whether a real citation gap exists, and if it does, produce a citation-gap report plus one rewritten page section in which every fact traces to a captured evidence field.",
+  "problem": "For a keyword that drives revenue, Google's AI Overview recommends a named competitor and never your brand. A content marketer has no repeatable way to prove that gap from real evidence, or to rewrite a page so it becomes citable without inventing statistics along the way.",
+  "job": "Given one brief, decide from captured evidence whether a real citation gap exists, and if it does, produce a citation-gap report plus one rewritten page section in which every fact traces to an evidence field.",
   "boundary": "Drafts copy only. Does not publish, touch a CMS, do keyword research, cover ChatGPT or Perplexity, or claim the rewrite will earn a citation.",
   "entry_skill": ".agents/skills/geo-citation-engineer/SKILL.md",
   "skill_name": "geo-citation-engineer",
@@ -26,29 +26,59 @@
     "language": "Python 3.11+",
     "demo_path_dependencies": "standard library only",
     "measured_plan_seconds": 0.17,
-    "measured_score_seconds": 0.19
+    "measured_score_seconds": 0.19,
+    "measured_fresh_clone_plan_plus_score_seconds": 0.32,
+    "measured_live_apify_capture_seconds": 96,
+    "live_capture_on_demo_path": false
   },
   "evidence": [
     {
-      "snapshot": "demo/input/snapshots/best-bible-study-app.2026-08-28.json",
-      "query": "best bible study app",
-      "request_url": "https://www.google.com/search?q=best+bible+study+app&hl=en&gl=us",
-      "retrieved_at": "2026-08-28T15:18:00+00:00",
-      "method": "browser_capture"
+      "snapshot": "demo/input/snapshots/best-real-estate-crowdfunding-platform-europe.2026-08-28.json",
+      "query": "best real estate crowdfunding platform europe",
+      "method": "apify_live_capture",
+      "actor": "apify/google-search-scraper",
+      "request_url": "https://www.google.com/search?q=best+real+estate+crowdfunding+platform+europe&hl=en&gl=us",
+      "retrieved_at": "2026-08-28T15:49:38+00:00",
+      "ai_overview_present": true
     },
     {
       "snapshot": "demo/input/snapshots/best-crm-for-startups.2026-08-28.json",
       "query": "best crm for startups",
+      "method": "apify_live_capture",
+      "actor": "apify/google-search-scraper",
       "request_url": "https://www.google.com/search?q=best+crm+for+startups&hl=en&gl=us",
-      "retrieved_at": "2026-08-28T15:20:00+00:00",
-      "method": "browser_capture"
+      "retrieved_at": "2026-08-28T15:51:01+00:00",
+      "ai_overview_present": true
+    },
+    {
+      "snapshot": "demo/input/snapshots/open-source-agent-skills.2026-08-28.json",
+      "query": "open source agent skills for coding agents",
+      "method": "apify_live_capture",
+      "actor": "apify/google-search-scraper",
+      "request_url": "https://www.google.com/search?q=open+source+agent+skills+for+coding+agents&hl=en&gl=us",
+      "retrieved_at": "2026-08-28T15:50:45+00:00",
+      "ai_overview_present": true
     },
     {
       "snapshot": "demo/input/snapshots/thin-evidence.test.json",
-      "query": "best bible study app for left-handed theologians",
+      "query": "best real estate crowdfunding platform for left-handed investors",
+      "method": "synthetic_test_fixture",
+      "actor": null,
       "request_url": null,
       "retrieved_at": null,
-      "method": "synthetic_test_fixture"
+      "ai_overview_present": false
+    }
+  ],
+  "brand_facts_sources": [
+    {
+      "brand": "Stock.estate",
+      "source_url": "https://stock.estate",
+      "retrieved_at": "2026-08-28T15:30:00+00:00"
+    },
+    {
+      "brand": "Formidable Builders",
+      "source_url": "https://www.formidable.builders",
+      "retrieved_at": "2026-08-28T15:31:00+00:00"
     }
   ]
 }

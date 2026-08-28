@@ -2,7 +2,7 @@ interface:
   display_name: GEO Citation Engineer
   short_description: Prove an AI-search citation gap, then rewrite the page to close it
   brand_color: "#0F766E"
-  default_prompt: "Use $geo-citation-engineer with the brief at demo/input/bible-chat.brief.json. Run the plan step, obey the action it returns, write the rewrite into the report, then run the score step and show the pass/fail table. No live fetching."
+  default_prompt: "Use $geo-citation-engineer with the brief at demo/input/stock-estate.brief.json. Run the plan step, obey the action it returns, write the rewrite into the report, then run the score step and show the pass/fail table. No live fetching."
 
 policy:
   allow_implicit_invocation: true

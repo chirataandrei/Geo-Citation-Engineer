@@ -1,103 +1,133 @@
 {
-  "schema_version": "2",
+  "schema_version": "3",
   "query": "best crm for startups",
   "provenance": {
-    "method": "browser_capture",
-    "engine": "google_web_search",
+    "method": "apify_live_capture",
+    "engine": "google_ai_overview",
+    "actor": "apify/google-search-scraper",
+    "actor_input": {
+      "queries": "best crm for startups",
+      "maxPagesPerQuery": 1,
+      "countryCode": "us",
+      "languageCode": "en",
+      "aiOverview": {
+        "scrapeFullAiOverview": true
+      }
+    },
     "request_url": "https://www.google.com/search?q=best+crm+for+startups&hl=en&gl=us",
-    "country_code": "us",
-    "language_code": "en",
-    "retrieved_at": "2026-08-28T15:20:00+00:00",
-    "captured_by": "headless Chromium session, rendered SERP text read verbatim",
-    "ai_overview_present": false,
-    "ai_overview_note": "No AI Overview rendered in an automated browser session. Titles, URLs, snippets and People-Also-Ask strings are transcribed verbatim from the rendered page. Gap analysis runs against the organic citable set.",
+    "retrieved_at": "2026-08-28T15:51:01.172074+00:00",
+    "ai_overview_present": true,
     "verbatim": true,
-    "truncated": "Top-of-page results only; pagination not followed."
+    "post_processing": [
+      "Google interface chrome trimmed at the 'AI responses may include mistakes' footer.",
+      "AI Overview citation URLs arrive as opaque /goto redirect stubs; each was resolved to its publisher URL by matching the citation's publisher against the organic results. url_raw preserves the original stub.",
+      "Duplicate relatedQueries collapsed.",
+      "No wording was altered, added, or paraphrased."
+    ],
+    "truncated": "One SERP page (maxPagesPerQuery=1)."
   },
-  "ai_overview_text": null,
+  "ai_overview_text": "The HubSpot CRM is the best overall choice for startups because it starts completely free and scales smoothly as your company grows.Choosing the right customer relationship management (CRM) tool depends on your team's specific goals and budget. Here are the top options for early-stage companies:Pipedrive: Best for sales-heavy teams. It uses a visual pipeline to help salespeople track daily tasks and close deals fast. Plans start around $34 per user monthly.Zoho CRM: Best for budget-conscious depth. It offers deep customization and built-in AI tools at a low price point. Plans are roughly $14 per user monthly.monday.com: Best for flexible workspaces. It blends project tracking and sales pipelines into a colorful, easy board. Plans start near $12 per user monthly.Watch this video for a visual breakdown of how top platforms compare for sales teams:3mBest CRM for Startups 2026: HubSpot vs Pipedrive vs NetHunt ...3 months agoYouTube·NetHunt CRMWatch this video for a visual breakdown of how top platforms compare for sales teams:3mBest CRM for Startups 2026: HubSpot vs Pipedrive vs NetHunt ...3 months agoYouTube·NetHunt CRMHow to ChoosePick a free tool like HubSpot if you want to test basic contact tracking without spending money.Pick a sales-focused tool like Pipedrive if your founders spend all day cold-calling and closing leads.Pick a value tool like Zoho if you need advanced features on a strict budget.Explore alternative insights from the Baserow Blog.Read a detailed platform breakdown on the monday.com Blog.Check out specialized rankings on the Salesflare Blog.If you tell me your startup's primary goal (outbound sales, customer support, or service delivery) and your team size, I can recommend the exact platform for you.If you tell me your startup's primary goal (outbound sales, customer support, or service delivery) and your team size, I can recommend the exact platform for you.",
   "cited_sources": [
     {
-      "title": "What's the best CRM for an early stage, bootstrapped startup? - Reddit r/CRM",
-      "url": "https://www.reddit.com/r/CRM/",
-      "snippet": "We're just 2 people right now who are growing fast averaging 60 leads a month, and Salesforce or HubSpot feel way too heavy for where we are."
-    },
-    {
-      "title": "Best CRM for a growing tech startup? - G2",
-      "url": "https://www.g2.com/discussions",
-      "snippet": "While HubSpot and Pipedrive are the crowd favorites (and for good reason), let me toss in an honorable mention for Freshsales and Monday.com CRM."
-    },
-    {
-      "title": "Best CRM For Startups: The All-In-One Guide",
+      "title": "Best CRM For Startups: The All-In-One Guide - Salesforce",
       "url": "https://www.salesforce.com/crm/startup-crm/",
-      "snippet": "Starter and Pro Suite are two Salesforce solutions that were specifically designed for startups. They're affordable CRM suites that come with marketing, sales, and more."
+      "snippet": "Do they work well together? With CRM, you have many tools that are ideal for startups on one platform, which means you can save ti...",
+      "url_raw": "/goto?url=CAESTgHrOzAVW23h_FMm-ljxdXO_beP8ku9_ZDLpJT9GNRUTkHQSVnljUqaTaUrL452A2q2NI-Ma0t04TDA6SlXHavKDiPs3xpMw7cFUQkIjBw",
+      "url_resolved_from": "organic_publisher_match"
     },
     {
-      "title": "CRM for Startups: Free Software to Scale Your Business",
-      "url": "https://www.hubspot.com/products/crm",
-      "snippet": "CRM for startups should scale with your growth. Learn when to switch from spreadsheets, essential features, and how to get started with HubSpot's CRM."
+      "title": "Best CRM for startups of 2026 - TechRadar",
+      "url": "https://www.techradar.com/best/the-best-crm-for-startups",
+      "snippet": "Table_title: The best CRM for startups compared Table_content: | Row 0 - Cell 0 | Price | Support | | --- | --- | --- | | HubSpot ...",
+      "url_raw": "/goto?url=CAESWwHrOzAVIULzchNLWE7Ukfh7F6MGvdTpEAG0yqLh6ImPApVo6jT795J8-j44EnSo246NwZ2Czk8Hwy47vZpdn5LkRUU9YwIHepEXkh42S1sVSTSN2rgrGOETFLc",
+      "url_resolved_from": "organic_publisher_match"
     },
     {
-      "title": "Best CRMs for Startups: Tools, Benefits, and Tips",
-      "url": "https://slack.com/blog/crm/best-crms-for-startups",
-      "snippet": "Best CRM software for startups: Salesforce Starter Suite, Slack CRM, HubSpot CRM, Zoho CRM, Pipedrive, Monday CRM, Freshsales, Copper."
-    },
-    {
-      "title": "Best CRM for Startups - Know Before You Pick",
-      "url": "https://www.convergehub.com/blog/best-crm-for-startups",
-      "snippet": "The best CRM for a startup depends on your business needs. Compare HubSpot, ConvergeHub, and Salesforce for features, pricing, automation, and growth."
-    },
-    {
-      "title": "Best CRM for Startups | CRM Software for small businesses",
-      "url": "https://www.zoho.com/crm/verticals/startups/",
-      "snippet": "Zoho CRM is the gold standard for taking startups to the next level. CRM is easy to use, easy to onboard and takes zero implementation time."
-    },
-    {
-      "title": "The Best CRM for Startups and Small Businesses",
-      "url": "https://www.quickbase.com/blog",
-      "snippet": "Compare HubSpot, Zoho CRM, Pipedrive, monday.com, and Quickbase to choose the right startup CRM by stage, budget, and workflow."
-    },
-    {
-      "title": "Best CRM for Startups: Guide and Reviews",
-      "url": "https://www.zendesk.com/sell/crm/startups/",
-      "snippet": "Bitrix24 is one of the best free CRM for startups. It offers popular features like social media and email integrations, analytics and reports.",
-      "published": "2025-08-22"
+      "title": "Best CRM for Startups (2026) - Baserow",
+      "url": "https://baserow.io/blog/best-crm-tools-for-startups",
+      "snippet": "Often touted as the best free CRM on the market, HubSpot provides a seamless entry point for startups. It offers contact tracking,",
+      "url_raw": "/goto?url=CAESVgHrOzAVJNi92F_qtsOYQM82W0d52y20bYuZOrAQ2cfgdh6mKQuhYEG8Y2TyRxthoYYuobwR2yKVZBpp-2RGbr7v2nowAvENdenSjjxMN9YMAuNEUEHD",
+      "url_resolved_from": "organic_publisher_match"
     }
   ],
   "organic": [
     {
-      "title": "CRM for Startups: Free Software to Scale Your Business",
-      "url": "https://www.hubspot.com/products/crm",
-      "snippet": "CRM for startups should scale with your growth."
+      "title": "What's the best CRM for an early stage, bootstrapped ...",
+      "url": "https://www.reddit.com/r/CRM/comments/1ncf59q/whats_the_best_crm_for_an_early_stage/",
+      "snippet": "We're just 2 people right now who are growing fast averaging 60 leads a month, and Salesforce or HubSpot feel way too heavy for where we are. But Google ..."
     },
     {
-      "title": "Best CRMs for Startups: Tools, Benefits, and Tips",
-      "url": "https://slack.com/blog/crm/best-crms-for-startups",
-      "snippet": "Salesforce Starter Suite, Slack CRM, HubSpot CRM, Zoho CRM, Pipedrive, Monday CRM, Freshsales, Copper."
+      "title": "Best CRM For Startups: The All-In-One Guide",
+      "url": "https://www.salesforce.com/crm/startup-crm/",
+      "snippet": "Starter and Pro Suite are two Salesforce solutions that were specifically designed for startups. They're affordable CRM suites that come with marketing, sales, ...Read more"
+    },
+    {
+      "title": "Best CRM for startups of 2026",
+      "url": "https://www.techradar.com/best/the-best-crm-for-startups",
+      "snippet": "HubSpot is our overall top pick thanks to its generous free plan, extensive suite of tools, and startup-exclusive discounts. Zoho's another ...Read more"
+    },
+    {
+      "title": "Best CRM for Startups | CRM Software for small businesses",
+      "url": "https://www.zoho.com/crm/verticals/startups.html",
+      "snippet": "Zoho CRM is the gold standard for taking startups to the next level. CRM is easy to use, easy to onboard and takes zero implementation time."
+    },
+    {
+      "title": "CRM for Startups: Free Software to Scale Your Business",
+      "url": "https://www.hubspot.com/products/crm/startups",
+      "snippet": "CRM for startups should scale with your growth. Learn when to switch from spreadsheets, essential features, and how to get started with HubSpot's CRM."
+    },
+    {
+      "title": "Best CRM Tools for Startups",
+      "url": "https://baserow.io/blog/best-crm-tools-for-startups",
+      "snippet": "Tools like Zoho, HubSpot, and Baserow are popular for their affordability, ease of use, and customization options tailored to startup workflows."
+    },
+    {
+      "title": "Best CRM for Startups: Guide and Reviews",
+      "url": "https://www.zendesk.com/sell/crm/startups/",
+      "snippet": "Bitrix24 is one of the best free CRM for startups. It offers popular features like social media and email integrations, analytics and reports, ..."
+    },
+    {
+      "title": "The Best CRM for Startups and Small Businesses",
+      "url": "https://www.quickbase.com/blog/best-crm-for-startups-small-business",
+      "snippet": "Compare HubSpot, Zoho CRM, Pipedrive, monday.com, and Quickbase to choose the right startup CRM by stage, budget, and workflow."
+    },
+    {
+      "title": "Best CRM for startups: 13 platforms that scale with your team",
+      "url": "https://monday.com/blog/crm-and-sales/crm-for-start-ups/",
+      "snippet": "HubSpot CRM offers startups a free entry point into contact management, deal tracking, and email marketing, all under one roof. Teams that want ...Read more"
     }
   ],
   "people_also_ask": [
+    "What is the best CRM for startups?",
     "Will CRM be replaced by AI?",
-    "What are the top 3 CRM systems?",
     "What is the best free CRM for startups?",
-    "Which CRM is beginner friendly?"
+    "What are the top 3 CRM systems?"
   ],
   "related_queries": [
-    "Best crm for startups free",
     "Best crm for startups reddit",
+    "Best crm for startups free",
+    "Zoho CRM",
+    "HubSpot",
+    "Pipedrive",
     "Free CRM for startups",
-    "Best CRM for small business"
+    "Best CRM for small business",
+    "HubSpot CRM"
   ],
   "quotes": [],
   "raw_item_count": 1,
   "fan_out": [
+    "What is the best CRM for startups?",
     "Will CRM be replaced by AI?",
-    "What are the top 3 CRM systems?",
     "What is the best free CRM for startups?",
-    "Which CRM is beginner friendly?",
-    "Best crm for startups free",
+    "What are the top 3 CRM systems?",
     "Best crm for startups reddit",
+    "Best crm for startups free",
+    "Zoho CRM",
+    "HubSpot",
+    "Pipedrive",
     "Free CRM for startups",
-    "Best CRM for small business"
+    "Best CRM for small business",
+    "HubSpot CRM"
   ],
   "brand": "Attio",
   "competitor": "HubSpot",
@@ -105,7 +135,7 @@
   "competitor_mentioned_in_ai": true,
   "gap": "competitor cited; brand absent",
   "brand_facts": {
-    "note": "Reusability case in a different industry. No first-party claims were collected for Attio, so brand_facts is deliberately empty: the skill must produce a qualitative rewrite with zero invented numbers. Attio is a third-party brand; the rewrite is an illustrative draft built only from public SERP evidence, not an Attio-authored or Attio-endorsed claim set.",
+    "note": "Reusability case in a different industry. No first-party claims were collected for Attio, so brand_facts is deliberately empty: the skill must produce a qualitative rewrite with zero brand statistics. Attio is a third-party brand; the rewrite is an illustrative draft built only from public SERP evidence, not Attio-authored or Attio-endorsed copy.",
     "source_url": null,
     "retrieved_at": null,
     "claims": []

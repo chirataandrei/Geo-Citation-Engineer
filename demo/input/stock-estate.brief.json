@@ -1,0 +1,25 @@
+{
+  "case_id": "stock-estate",
+  "query": "best real estate crowdfunding platform europe",
+  "brand": "Stock.estate",
+  "brand_domain": "stock.estate",
+  "competitor": "EstateGuru",
+  "snapshot": "demo/input/snapshots/best-real-estate-crowdfunding-platform-europe.2026-08-28.json",
+  "draft": "demo/input/stock-estate.draft.md",
+  "brand_facts": {
+    "note": "First-party claims transcribed from https://stock.estate on 2026-08-28. The skill may cite these; it may not invent others.",
+    "source_url": "https://stock.estate",
+    "retrieved_at": "2026-08-28T15:30:00+00:00",
+    "claims": [
+      "Minimum investment is 100 EUR",
+      "Target returns between 10% and 20% a year in EUR",
+      "Developer loans range from 100k to 1.5m EUR",
+      "Fixed all-in annual cost to developers is 19.9%",
+      "Authorised in Romania by ASF under licence PJR28FSFPR/400002",
+      "EU passporting across all member states under ECSPR",
+      "Loans are secured against real estate",
+      "Monthly interest payments to investors",
+      "10% withholding tax applied for Romanian individuals"
+    ]
+  }
+}

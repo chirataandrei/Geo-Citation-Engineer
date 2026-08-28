@@ -1,4 +1,4 @@
-Use $geo-citation-engineer with the brief at `demo/input/bible-chat.brief.json`.
+Use $geo-citation-engineer with the brief at `demo/input/stock-estate.brief.json`.
 
 Run the plan step, obey the `action` it returns, write the rewrite into the report, then run the score step and show me the final pass/fail table.
 

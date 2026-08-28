@@ -1,0 +1,129 @@
+{
+  "schema_version": "3",
+  "query": "best real estate crowdfunding platform europe",
+  "provenance": {
+    "method": "apify_live_capture",
+    "engine": "google_ai_overview",
+    "actor": "apify/google-search-scraper",
+    "actor_input": {
+      "queries": "best real estate crowdfunding platform europe",
+      "maxPagesPerQuery": 1,
+      "countryCode": "us",
+      "languageCode": "en",
+      "aiOverview": {
+        "scrapeFullAiOverview": true
+      }
+    },
+    "request_url": "https://www.google.com/search?q=best+real+estate+crowdfunding+platform+europe&hl=en&gl=us",
+    "retrieved_at": "2026-08-28T15:49:38.094320+00:00",
+    "ai_overview_present": true,
+    "verbatim": true,
+    "post_processing": [
+      "Google interface chrome trimmed at the 'AI responses may include mistakes' footer.",
+      "AI Overview citation URLs arrive as opaque /goto redirect stubs; each was resolved to its publisher URL by matching the citation's publisher against the organic results. url_raw preserves the original stub.",
+      "Duplicate relatedQueries collapsed.",
+      "No wording was altered, added, or paraphrased."
+    ],
+    "truncated": "One SERP page (maxPagesPerQuery=1)."
+  },
+  "ai_overview_text": "The top-rated real estate crowdfunding platforms in Europe include Estateguru for property-backed debt loans, InRento for rental income, and aggregator tools like BrikkApp to compare multi-platform projects.InRento: Specializes in buy-to-let and rental income property investments structured as leasing or debt.Average Returns: ~6% to 11% plus capital growth potential.Minimum Investment: €500.Core Markets: Regulated EU operations spanning Lithuania, Poland, Spain, and Ireland.Reinvest24: Offers rental income and real estate development projects, allowing retail investors to buy fractional shares of rental properties or development debt.Average Returns: 10% to 14% annually.Minimum Investment: €100.Core Markets: Baltic region and Western Europe.Raizers: A France-based, AMF-regulated platform focusing on corporate and real estate debt.Average Returns: 9% to 10% annually.Minimum Investment: €1,000.Core Markets: France, Switzerland, and Western Europe.How to Compare and ChooseUse Aggregators: Platforms like BrikkApp let you track and auto-invest across multiple European real estate lenders with zero commission. Use directories like CrowdSpace to filter by regulatory status and target yields.Check Regulations: Look for platforms operating under the European Crowdfunding Service Providers Regulation (ECSPR), which standardizes cross-border rules and investor protection up to €5 million per project.Could you tell me what type of investment you prefer (fixed-interest debt loans vs. equity/rental income) and your target budget so I can recommend the best-fit platform?Could you tell me what type of investment you prefer (fixed-interest debt loans vs. equity/rental income) and your target budget so I can recommend the best-fit platform?Explore the global directory and tools on CrowdSpace.Compare project risk metrics via BrikkApp.",
+  "cited_sources": [
+    {
+      "title": "Real estate crowdfunding platforms - CrowdSpace",
+      "url": "https://thecrowdspace.com/directory/real-estate-crowdfunding-platforms/",
+      "snippet": "Debt crowdfunding landscape in Real estate * The platform offers hand-picked projects, no investor fees, secured by Austrian regul...",
+      "url_raw": "/goto?url=CAESfwHrOzAVslIkH-8D0hlN4kMe7SjDgoMv_kOBG1GIDD55zGBIjOOtiBnZXgnXQwW4sBFLtrZFnAER_I1QcnLLQaPTpWvk_Hs2u8Si0F5fKTeMy1RhEE_e8_8VeSGOspxEBwAApb-5sUplJ0eSTDU276PSslc_X7-UB8rQIisL6Xc",
+      "url_resolved_from": "organic_publisher_match"
+    },
+    {
+      "title": "BrikkApp | Invest in Real Estate",
+      "url": "https://brikkapp.com/",
+      "snippet": "BrikkApp: real estate crowdfunding marketplace. Features: - Returns: up to 12% annually. - Fees: 0% commission. - Min investment: ...",
+      "url_raw": "/goto?url=CAESTQHrOzAVw3_NkaUvKfU_rmaB_G1IrM4lUqGmnRHL9ig0OCfhoy1elxQVKGveCwj-OgEIsOKZ3t_6k7Q2vwttYp1cRXQ5bBhj6dAkCDbJ",
+      "url_resolved_from": "organic_publisher_match"
+    },
+    {
+      "title": "Best real estate crowdfunding platforms in Europe |… - CrowdSpace",
+      "url": "https://thecrowdspace.com/directory/real-estate-crowdfunding-platforms/",
+      "snippet": "EstateGuru. EstateGuru is a popular crowdfunding provider that has been on the market for quite some time now. This Estonia-based ...",
+      "url_raw": "/goto?url=CAEShAEB6zswFbNvdkB3QLrVFHV6qzsw7QPAbeGVqdxaMA6P99RDyr7MNZAhJ6vDvtPLdUgsNB7yP3yVJU1Z11iotTmvxr_yjSQWaAvGAqw55Zc0U3aKGVW2ZXPwvp1imhciw5cRcCSdp8uXfDrnYIlnn8lt7LS78cteV2y5sf6bU3v105DE90o",
+      "url_resolved_from": "organic_publisher_match"
+    }
+  ],
+  "organic": [
+    {
+      "title": "Best European Real Estate Crowdfunding Platforms 2026",
+      "url": "https://marcoschwartz.com/best-real-estate-crowdfunding-platforms/",
+      "snippet": "Best European real estate crowdfunding platforms 2026, curated from personal experience. EstateGuru, Reinvest24, Housers, Crowdpear, ..."
+    },
+    {
+      "title": "InRento",
+      "url": "https://inrento.com/",
+      "snippet": "With InRento, your investment does more — generating monthly income while helping shape cities people need. From €500, invest in property-backed real estate ...Read more"
+    },
+    {
+      "title": "List of the best Real estate crowdfunding platforms |…",
+      "url": "https://thecrowdspace.com/directory/real-estate-crowdfunding-platforms/",
+      "snippet": "Letsinvest is European crowdfunding platform which is open to both, individuals and companies. Operated by independent experts … starting from 1,000 EUR."
+    },
+    {
+      "title": "Find Real Estate Crowdfunding Platforms in Europe.",
+      "url": "https://p2pmarketdata.com/real-estate-platforms-europe/",
+      "snippet": "Discover and compare Real Estate Crowdfunding investment platforms in Europe to find your next real estate investment opportunity. · Profitus · Rontgen.Read more"
+    },
+    {
+      "title": "BrikkApp | Invest in Real Estate",
+      "url": "https://brikkapp.com/",
+      "snippet": "Brikkapp is your one-stop-shop for real estate crowdfunding. Find and compare investments worldwide from as low as €100. Top-rated marketplace"
+    },
+    {
+      "title": "Top 15 Crowdfunding Platforms in Europe",
+      "url": "https://crowdsourcingweek.com/blog/top-15-crowdfunding-platforms-in-europe/",
+      "snippet": "Top 15 Crowdfunding Platforms in Europe · 1) Crowdcube, UK · 2) Republic Europe (formerly Seedrs), UK · 3) Mintos, Latvia · 4) Companisto, Germany · 5) Ulule, France.Read more"
+    },
+    {
+      "title": "Best UK Real Estate Crowdfunding Platforms in 2026",
+      "url": "https://jeangalea.com/best-uk-real-estate-crowdfunding-platforms/",
+      "snippet": "Best UK real estate crowdfunding platforms for 2026. CrowdProperty, CapitalRise, and Shojin reviewed alongside an honest"
+    },
+    {
+      "title": "Crowdestate | Crowdfunding and payment infrastructure",
+      "url": "https://crowdestate.eu/",
+      "snippet": "Crowdestate has returned its crowdfunding licence and is no longer operating its own crowdfunding marketplace. The company is now focused on infrastructure ...Read more"
+    }
+  ],
+  "people_also_ask": [],
+  "related_queries": [
+    "Best real estate crowdfunding platform europe reviews",
+    "Best real estate crowdfunding platform europe free",
+    "Real estate crowdfunding platforms",
+    "Estateguru",
+    "InRento",
+    "International real estate crowdfunding",
+    "Crowdpear",
+    "Best crowdfunding investment platforms"
+  ],
+  "quotes": [],
+  "raw_item_count": 1,
+  "fan_out": [
+    "Best real estate crowdfunding platform europe reviews",
+    "Best real estate crowdfunding platform europe free",
+    "Real estate crowdfunding platforms",
+    "Estateguru",
+    "InRento",
+    "International real estate crowdfunding",
+    "Crowdpear",
+    "Best crowdfunding investment platforms"
+  ],
+  "brand": "EstateGuru",
+  "competitor": "Stock.estate",
+  "brand_mentioned_in_ai": true,
+  "competitor_mentioned_in_ai": false,
+  "gap": "brand cited; competitor absent",
+  "brand_facts": {
+    "note": "Exclusion case. Same live snapshot as the stock-estate case, brand and competitor swapped. Google's AI Overview already names EstateGuru, so the correct behaviour is to decline the rewrite rather than produce one anyway.",
+    "source_url": null,
+    "retrieved_at": null,
+    "claims": []
+  }
+}

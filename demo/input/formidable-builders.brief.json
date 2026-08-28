@@ -1,0 +1,21 @@
+{
+  "case_id": "formidable-builders",
+  "query": "open source agent skills for coding agents",
+  "brand": "Formidable Builders",
+  "brand_domain": "formidable.builders",
+  "competitor": "Anthropic",
+  "snapshot": "demo/input/snapshots/open-source-agent-skills.2026-08-28.json",
+  "draft": "demo/input/formidable-builders.draft.md",
+  "brand_facts": {
+    "note": "Uncontested-answer case. First-party claims transcribed from https://www.formidable.builders on 2026-08-28. Neither the brand nor the named competitor appears in this AI Overview, so the opportunity is an unclaimed answer rather than a competitor gap.",
+    "source_url": "https://www.formidable.builders",
+    "retrieved_at": "2026-08-28T15:31:00+00:00",
+    "claims": [
+      "450+ formidable builders in the community",
+      "3 published skills, open source on GitHub",
+      "Public project board and members directory",
+      "Skills are practical coding instructions, MIT licensed",
+      "Community events listed on a public calendar"
+    ]
+  }
+}

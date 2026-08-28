@@ -179,6 +179,7 @@ def classify(evidence: dict[str, Any], numbers: list[str]) -> dict[str, str]:
     if not has_overview and len(cited) < 2:
         return {
             "evidence_level": "insufficient",
+            "opportunity": "none",
             "action": "abort",
             "reason": (
                 f"Only {len(cited)} cited source(s) and no AI Overview text. "
@@ -190,6 +191,7 @@ def classify(evidence: dict[str, Any], numbers: list[str]) -> dict[str, str]:
         verdict = evidence.get("gap") or ""
         return {
             "evidence_level": "sufficient",
+            "opportunity": "none",
             "action": "decline",
             "reason": (
                 f"Brand is already inside the citable set ({verdict}). "
@@ -197,17 +199,34 @@ def classify(evidence: dict[str, Any], numbers: list[str]) -> dict[str, str]:
             ),
         }
 
+    # Competitor named vs nobody named are different opportunities and deserve
+    # different copy: one displaces an incumbent answer, the other claims a
+    # question no one owns yet.
+    contested = bool(evidence.get("competitor_mentioned_in_ai"))
+    opportunity = "competitor_gap" if contested else "uncontested_answer"
+    framing = (
+        f"{evidence.get('competitor')} is named in the AI Overview and {evidence.get('brand')} is not. "
+        "Displace the incumbent answer."
+        if contested
+        else (
+            f"Neither {evidence.get('brand')} nor {evidence.get('competitor')} is named in the AI "
+            "Overview. This answer is unclaimed — write to own it rather than to displace anyone."
+        )
+    )
+
     if not numbers:
         return {
             "evidence_level": "qualitative_only",
+            "opportunity": opportunity,
             "action": "rewrite",
-            "reason": "Gap confirmed but no numeric facts available. Write qualitative atomic facts only; use no digits.",
+            "reason": f"{framing} No numeric facts available, so write qualitative atomic facts only.",
         }
 
     return {
         "evidence_level": "sufficient",
+        "opportunity": opportunity,
         "action": "rewrite",
-        "reason": "Gap confirmed and numeric facts are available. Proceed with the rewrite.",
+        "reason": f"{framing} Numeric facts are available.",
     }
 
 
@@ -229,7 +248,11 @@ def render_report(brief: dict[str, Any], evidence: dict[str, Any], verdict: dict
     add(f"- **Brand:** {brand}" + (f" ({brief.get('brand_domain')})" if brief.get("brand_domain") else ""))
     add(f"- **Competitor tracked:** {competitor}")
     add(f"- **Verdict:** {evidence.get('gap','')}")
+    add(f"- **{competitor} named in the AI Overview:** {bool(evidence.get('competitor_mentioned_in_ai'))}")
+    add(f"- **{brand} named in the AI Overview:** {bool(evidence.get('brand_mentioned_in_ai'))}")
     add(f"- **Evidence level:** {verdict['evidence_level']}")
+    if verdict.get("opportunity") and verdict["opportunity"] != "none":
+        add(f"- **Opportunity:** {verdict['opportunity'].replace('_',' ')}")
     add("")
     add("## Provenance")
     add("")
@@ -321,7 +344,11 @@ def do_plan(root: Path, args: argparse.Namespace) -> int:
         "brand": evidence.get("brand"),
         "competitor": evidence.get("competitor"),
         "gap_verdict": evidence.get("gap"),
+        "competitor_named_in_ai_overview": bool(evidence.get("competitor_mentioned_in_ai")),
+        "brand_named_in_ai_overview": bool(evidence.get("brand_mentioned_in_ai")),
+        "ai_overview_present": bool(evidence.get("ai_overview_text")),
         "evidence_level": verdict["evidence_level"],
+        "opportunity": verdict.get("opportunity"),
         "action": verdict["action"],
         "reason": verdict["reason"],
         "report_path": str(report_path.relative_to(root)).replace("\\", "/"),

@@ -1,0 +1,135 @@
+{
+  "schema_version": "3",
+  "query": "open source agent skills for coding agents",
+  "provenance": {
+    "method": "apify_live_capture",
+    "engine": "google_ai_overview",
+    "actor": "apify/google-search-scraper",
+    "actor_input": {
+      "queries": "open source agent skills for coding agents",
+      "maxPagesPerQuery": 1,
+      "countryCode": "us",
+      "languageCode": "en",
+      "aiOverview": {
+        "scrapeFullAiOverview": true
+      }
+    },
+    "request_url": "https://www.google.com/search?q=open+source+agent+skills+for+coding+agents&hl=en&gl=us",
+    "retrieved_at": "2026-08-28T15:50:45.238529+00:00",
+    "ai_overview_present": true,
+    "verbatim": true,
+    "post_processing": [
+      "Google interface chrome trimmed at the 'AI responses may include mistakes' footer.",
+      "AI Overview citation URLs arrive as opaque /goto redirect stubs; each was resolved to its publisher URL by matching the citation's publisher against the organic results. url_raw preserves the original stub.",
+      "Duplicate relatedQueries collapsed.",
+      "No wording was altered, added, or paraphrased."
+    ],
+    "truncated": "One SERP page (maxPagesPerQuery=1)."
+  },
+  "ai_overview_text": "Open source agent skills are modular folders containing SKILL.md instruction files, automation scripts, and templates that teach AI coding agents specialized production workflows.Automation: Often paired with optional shell/Python scripts, reference guides, and tests (eval/) to handle repetitive tasks.Universal compatibility: Loaded on-demand by major agent runtimes like Claude Code, OpenCode, and Cursor.Top Open Source Agent Skills Repositoriesaddyosmani/agent-skills: Production-grade engineering workflows (spec writing, test-driven development, debugging) based on Google's engineering practices.agentskillexchange/skills: An open, curated catalog of trusted reusable skills wrapping real APIs and tools for multiple agent ecosystems.VoltAgent/awesome-agent-skills: A massive curated collection of 1,000+ community and official agent skills.openclaw/agent-skills: Specialized utilities for local transcript provenance, autoreview, and remote validation workflows.If you want, tell me:Which coding agent you use (Claude Code, OpenCode, Cursor, etc.)What task you want the agent to handle better (testing, debugging, infrastructure)I can recommend the exact skills or show you how to write a custom SKILL.md for your project.If you want, tell me:I can recommend the exact skills or show you how to write a custom SKILL.md for your project.",
+  "cited_sources": [
+    {
+      "title": "addyosmani/agent-skills: Production-grade ... - GitHub",
+      "url": "https://github.com/addyosmani/agent-skills",
+      "snippet": "Why Agent Skills? AI coding agents default to the shortest path - which often means skipping specs, tests, security reviews, and t...",
+      "url_raw": "/goto?url=CAESTQHrOzAVMiG_MtxrEb4oh8-p2vQu-l1y1WGQ50FO2YJ_xS9mDloJn_tNrQN992srQ_69v4pyKZtXg-WeSBlVBbLezZ45bXkLyTkeXg2v",
+      "url_resolved_from": "organic_publisher_match"
+    },
+    {
+      "title": "What are Agent Skills? How I use skills with my AI Coding ...",
+      "url": "",
+      "snippet": "today I wanted to share how I use skills with my AI coding agents like cloud code or GitHub copilot. so if you are not aware about...",
+      "url_raw": "/goto?url=CAESTgHrOzAVKXHR0r4MU4wsN_7PeVNjPHLtjrQbqD4ncypT-99JRyB9jdbOT9diYdioLTwB4Kv5tRw0CDvHlkItEYvxjxJux4ksY_68AqwhMw",
+      "url_note": "Google redirect stub; publisher URL not resolvable from this capture"
+    },
+    {
+      "title": "380 Claude Code skills & agent skills & plugins (30+ ... - GitHub",
+      "url": "https://github.com/addyosmani/agent-skills",
+      "snippet": "What Are Claude Code Skills & Agent Plugins? Claude Code skills (also called agent skills or coding agent plugins) are modular ins...",
+      "url_raw": "/goto?url=CAESUgHrOzAVv4JTWZ4xCmK8TDGL_klri2KQWtVOZ0ogmQ9bbyViDv5UAJJXBahQYmwsvDnTur20NJa48bK8eIoxyDOmNATe6U_TUKU3Y7hPj4dNzlY",
+      "url_resolved_from": "organic_publisher_match"
+    }
+  ],
+  "organic": [
+    {
+      "title": "addyosmani/agent-skills: Production-grade engineering ...",
+      "url": "https://github.com/addyosmani/agent-skills",
+      "snippet": "Agent Skills gives agents structured workflows that enforce the same discipline senior engineers bring to production code. Each skill encodes ..."
+    },
+    {
+      "title": "I maintain an open-source library of 181 agent skills. ...",
+      "url": "https://www.reddit.com/r/ClaudeAI/comments/1rrkicy/i_maintain_an_opensource_library_of_181_agent/",
+      "snippet": "Hey everyone 👋 The beauty of open source is that the best ideas come from users, not maintainers. I have been heads-down building for months — now ..."
+    },
+    {
+      "title": "Agent Skills",
+      "url": "https://opencode.ai/docs/skills/",
+      "snippet": "Agent skills let OpenCode discover reusable instructions from your repo or home directory. Skills are loaded on-demand via the native skill tool—agents"
+    },
+    {
+      "title": "SkillKit - Universal Skills for AI Coding Agents",
+      "url": "https://agenstskills.com/",
+      "snippet": "Write once, deploy to 46 AI coding agents. Skills for Claude Code, Cursor, Codex, Windsurf, GitHub Copilot, and more."
+    },
+    {
+      "title": "Open source AI agent skills",
+      "url": "https://www.openagentskill.com/best/open-source-ai-agent-skills",
+      "snippet": "A ranked shortlist of open-source AI agent skills across coding, research, finance, presentation, data, browser automation, and workflow automation use cases.Read more"
+    },
+    {
+      "title": "5 Agent Skills I Use Every Day",
+      "url": "https://www.aihero.dev/5-agent-skills-i-use-every-day",
+      "snippet": "Master AI code quality with proven engineering skills: prompt techniques, TDD, architecture design, and spec workflows for Claude Code agents."
+    },
+    {
+      "title": "Best Coding Agent Open Source Projects Top 20 | AgentList",
+      "url": "https://www.agentlist.top/en/best/coding-agent/",
+      "snippet": "OpenCode is an open-source terminal coding agent that supports multiple LLM providers, offering AI-powered code generation and editing in the terminal."
+    },
+    {
+      "title": "VoltAgent/awesome-agent-skills: A curated collection ...",
+      "url": "https://github.com/VoltAgent/awesome-agent-skills",
+      "snippet": "A curated collection of 1000+ agent skills from official dev teams and the community, compatible with Claude Code, Codex, Gemini CLI, Cursor, and more."
+    }
+  ],
+  "people_also_ask": [],
+  "related_queries": [
+    "Open source agent skills for coding agents reddit",
+    "Open source agent skills for coding agents github",
+    "Best open source agent skills for coding agents",
+    "Agent skills github",
+    "Agent skills marketplace",
+    "Agent skills library",
+    "Awesome-agent skills github",
+    "Addyosmani/agent-skills"
+  ],
+  "quotes": [],
+  "raw_item_count": 1,
+  "fan_out": [
+    "Open source agent skills for coding agents reddit",
+    "Open source agent skills for coding agents github",
+    "Best open source agent skills for coding agents",
+    "Agent skills github",
+    "Agent skills marketplace",
+    "Agent skills library",
+    "Awesome-agent skills github",
+    "Addyosmani/agent-skills"
+  ],
+  "brand": "Formidable Builders",
+  "competitor": "Anthropic",
+  "brand_mentioned_in_ai": false,
+  "competitor_mentioned_in_ai": false,
+  "gap": "neither brand nor competitor cited",
+  "brand_facts": {
+    "note": "Uncontested-answer case. First-party claims transcribed from https://www.formidable.builders on 2026-08-28. Neither the brand nor the named competitor appears in this AI Overview, so the opportunity is an unclaimed answer rather than a competitor gap.",
+    "source_url": "https://www.formidable.builders",
+    "retrieved_at": "2026-08-28T15:31:00+00:00",
+    "claims": [
+      "450+ formidable builders in the community",
+      "3 published skills, open source on GitHub",
+      "Public project board and members directory",
+      "Skills are practical coding instructions, MIT licensed",
+      "Community events listed on a public calendar"
+    ]
+  }
+}

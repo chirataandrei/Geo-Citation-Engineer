@@ -1,8 +1,10 @@
-# GEO citation gap: “best bible study app for left-handed theologians”
+# GEO citation gap: “best real estate crowdfunding platform for left-handed investors”
 
-- **Brand:** Bible Chat (thebiblechat.com)
-- **Competitor tracked:** YouVersion
+- **Brand:** Stock.estate (stock.estate)
+- **Competitor tracked:** EstateGuru
 - **Verdict:** neither brand nor competitor cited
+- **EstateGuru named in the AI Overview:** False
+- **Stock.estate named in the AI Overview:** False
 - **Evidence level:** insufficient
 
 ## Provenance
@@ -15,10 +17,10 @@
 
 | # | Source | URL | Names competitor |
 |---|--------|-----|------------------|
-| 1 | Bible study apps - overview page | https://example.org/bible-study-apps | no |
+| 1 | Real estate crowdfunding - directory stub | https://example.org/real-estate-crowdfunding | no |
 
-- Sources naming **YouVersion**: 0 of 1
-- Sources naming **Bible Chat**: 0 of 1
+- Sources naming **EstateGuru**: 0 of 1
+- Sources naming **Stock.estate**: 0 of 1
 
 ## Fan-out questions captured
 

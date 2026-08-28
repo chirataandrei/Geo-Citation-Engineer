@@ -4,8 +4,9 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -94,6 +95,87 @@ def _extract_ai_block(item: dict[str, Any]) -> tuple[str, list[dict[str, str]]]:
     return text, sources
 
 
+# Google appends interface chrome to the rendered AI Overview. Left in, it drags
+# UI strings and their digits ("valid for seven days") into the evidence budget.
+CHROME_MARKERS = (
+    "AI responses may include mistakes",
+    "AI can make mistakes",
+    "Your feedback helps Google improve",
+    "This public link is valid for",
+    "About this responseSave to Google Drive",
+    "When you export, you will allow Google Search",
+    "Save to Google Drive",
+)
+
+
+def strip_overview_chrome(text: str) -> str:
+    cut = len(text or "")
+    for marker in CHROME_MARKERS:
+        found = (text or "").find(marker)
+        if found != -1:
+            cut = min(cut, found)
+    return (text or "")[:cut].strip()
+
+
+def _publisher_slugs(title: str) -> list[str]:
+    """Candidate publisher slugs from a SERP title.
+
+    The publisher is usually the last ' - ' / ' | ' segment ("... - CrowdSpace")
+    but sometimes the first ("BrikkApp | Invest in Real Estate"), so try every
+    segment, longest first, plus the leading word.
+    """
+    parts = [p for p in re.split(r"\s*[-|·]\s*", title or "") if p.strip()]
+    candidates = [parts[-1], parts[0]] if parts else []
+    candidates += parts
+    first_word = (parts[0].split() or [""])[0] if parts else ""
+    candidates.append(first_word)
+    slugs: list[str] = []
+    for cand in candidates:
+        slug = re.sub(r"[^a-z0-9]+", "", cand.lower())
+        if len(slug) >= 4 and slug not in slugs:
+            slugs.append(slug)
+    return slugs
+
+
+def resolve_cited_urls(
+    cited: list[dict[str, str]], organic: list[dict[str, str]]
+) -> list[dict[str, str]]:
+    """Replace Google /goto redirect stubs with the real publisher URL.
+
+    The AI Overview block returns opaque redirect URLs. An unresolvable citation
+    URL is worthless as evidence, so match the citation's publisher against the
+    organic results, which do carry real URLs. Anything unmatched is flagged
+    rather than silently kept as a stub.
+    """
+    domains = []
+    for row in organic:
+        match = re.match(r"https?://([^/]+)", row.get("url", "") or "")
+        if match:
+            domains.append((re.sub(r"[^a-z0-9]+", "", match.group(1).lower()), row["url"]))
+
+    out: list[dict[str, str]] = []
+    for row in cited:
+        record = dict(row)
+        url = record.get("url", "") or ""
+        if url.startswith("http"):
+            out.append(record)
+            continue
+        record["url_raw"] = url
+        hit = ""
+        for slug in _publisher_slugs(record.get("title", "")):
+            hit = next((full for dom, full in domains if slug in dom), "")
+            if hit:
+                break
+        if hit:
+            record["url"] = hit
+            record["url_resolved_from"] = "organic_publisher_match"
+        else:
+            record["url"] = ""
+            record["url_note"] = "Google redirect stub; publisher URL not resolvable from this capture"
+        out.append(record)
+    return out
+
+
 def normalize_serp_item(item: dict[str, Any], query: str) -> dict[str, Any]:
     ai_text, cited = _extract_ai_block(item)
     organic: list[dict[str, str]] = []
@@ -122,10 +204,16 @@ def normalize_serp_item(item: dict[str, Any], query: str) -> dict[str, Any]:
             seen.add(key)
             fan_out.append(extra)
 
+    unique_related: list[str] = []
+    for row in related:
+        if row not in unique_related:
+            unique_related.append(row)
+    related = unique_related
+
     return {
         "query": query,
-        "ai_overview_text": ai_text,
-        "cited_sources": cited,
+        "ai_overview_text": strip_overview_chrome(ai_text),
+        "cited_sources": resolve_cited_urls(cited, organic),
         "organic": organic[:10],
         "people_also_ask": paa,
         "related_queries": related,
@@ -181,21 +269,60 @@ def quotes_from_reviews(reviews: list[dict[str, Any]], limit: int = 3) -> list[d
     return quotes
 
 
+def _as_dict(run: Any) -> dict[str, Any]:
+    """apify-client 2.x returns a dict; 3.x returns a typed Run object."""
+    if run is None:
+        return {}
+    if isinstance(run, dict):
+        return run
+    for attr in ("model_dump", "dict", "_asdict"):
+        fn = getattr(run, attr, None)
+        if callable(fn):
+            try:
+                out = fn()
+                if isinstance(out, dict):
+                    return out
+            except Exception:  # noqa: BLE001 — fall through to attribute scrape
+                pass
+    return {
+        key: getattr(run, key)
+        for key in dir(run)
+        if not key.startswith("_") and not callable(getattr(run, key, None))
+    }
+
+
 def _actor_call(client: Any, actor_id: str, run_input: dict[str, Any]) -> dict[str, Any]:
-    return client.actor(actor_id).call(
-        run_input=run_input,
-        timeout_secs=DEFAULT_WAIT_SECS,
-        wait_secs=DEFAULT_WAIT_SECS,
-    )
+    """Call an Actor across apify-client 2.x and 3.x.
+
+    3.x renamed timeout_secs/wait_secs to run_timeout/wait_duration (timedelta)
+    and defaults logger='default', which streams Actor logs to stdout and would
+    corrupt this script's JSON-only stdout contract.
+    """
+    actor = client.actor(actor_id)
+    wait = timedelta(seconds=DEFAULT_WAIT_SECS)
+    attempts: list[dict[str, Any]] = [
+        {"run_input": run_input, "run_timeout": wait, "wait_duration": wait, "logger": None},
+        {"run_input": run_input, "timeout_secs": DEFAULT_WAIT_SECS, "wait_secs": DEFAULT_WAIT_SECS},
+        {"run_input": run_input},
+    ]
+    last_error: Exception | None = None
+    for kwargs in attempts:
+        try:
+            return _as_dict(actor.call(**kwargs))
+        except TypeError as exc:  # unsupported kwarg for this client version
+            last_error = exc
+            continue
+    raise last_error or RuntimeError("actor call failed")
 
 
 def _dataset_items(client: Any, run: dict[str, Any], named: str | None = None) -> list[dict[str, Any]]:
     dataset_id = None
-    storage = run.get("storageIds") or {}
-    datasets = storage.get("datasets") or {}
+    run = _as_dict(run)
+    storage = _as_dict(run.get("storageIds") or run.get("storage_ids") or {})
+    datasets = _as_dict(storage.get("datasets") or {})
     if named and datasets.get(named):
         dataset_id = datasets[named]
-    dataset_id = dataset_id or run.get("defaultDatasetId")
+    dataset_id = dataset_id or run.get("defaultDatasetId") or run.get("default_dataset_id")
     if not dataset_id:
         return []
     return list(client.dataset(dataset_id).iterate_items())

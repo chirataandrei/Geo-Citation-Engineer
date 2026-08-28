@@ -1,6 +1,6 @@
 {
   "schema_version": "2",
-  "query": "best bible study app for left-handed theologians",
+  "query": "best real estate crowdfunding platform for left-handed investors",
   "provenance": {
     "method": "synthetic_test_fixture",
     "engine": null,
@@ -13,8 +13,8 @@
   "ai_overview_text": null,
   "cited_sources": [
     {
-      "title": "Bible study apps - overview page",
-      "url": "https://example.org/bible-study-apps",
+      "title": "Real estate crowdfunding - directory stub",
+      "url": "https://example.org/real-estate-crowdfunding",
       "snippet": "A short directory listing with no comparative detail."
     }
   ],

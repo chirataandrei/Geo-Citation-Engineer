@@ -11,7 +11,7 @@ compatibility: Python 3.11+. No credentials and no network needed; runs from a c
 
 **User:** a content marketer at a B2B or B2C software company.
 
-**Problem:** for a keyword that drives revenue, AI search cites a named competitor and never the user's brand.
+**Problem:** for a keyword that drives revenue, Google's AI Overview cites a named competitor and never the user's brand.
 
 **Job:** produce one citation-gap report plus one rewritten page section, with every fact traced to a captured evidence field.
 
@@ -21,18 +21,20 @@ compatibility: Python 3.11+. No credentials and no network needed; runs from a c
 
 One brief JSON path. Nothing else. The brief names the query, brand, competitor, evidence snapshot, draft, and first-party `brand_facts`.
 
-If the user gives a query and brand but no brief, copy `demo/input/bible-chat.brief.json`, edit the fields, and use that. If they give nothing, ask once for a brief path, then stop.
+If the user gives a query and brand but no brief, copy `demo/input/stock-estate.brief.json`, edit the fields, and use that. If they give nothing, ask once for a brief path, then stop.
 
 ## Step 1 — Plan (one command)
 
 ```bash
-python .agents/skills/geo-citation-engineer/scripts/run_geo.py plan --brief demo/input/bible-chat.brief.json
+python .agents/skills/geo-citation-engineer/scripts/run_geo.py plan --brief demo/input/stock-estate.brief.json
 ```
 
 Do not open the script. Stdout is the only source of truth. It writes a report scaffold to `output/` and prints:
 
 - `action` — `rewrite`, `decline`, or `abort`
-- `gap_verdict`, `evidence_level`, `sources_naming_competitor` of `sources_total`
+- `gap_verdict`, plus `competitor_named_in_ai_overview` and `brand_named_in_ai_overview` — the load-bearing facts
+- `opportunity` — `competitor_gap` (displace an incumbent answer) or `uncontested_answer` (nobody owns it yet)
+- `evidence_level`, `sources_naming_competitor` of `sources_total`
 - `fan_out_priority` — the three questions to answer
 - `allowed_numbers.brand` — digits you may assert about the brand
 - `allowed_numbers.evidence` — third-party digits, quotable only with the source named in the same sentence
@@ -43,7 +45,7 @@ Do not open the script. Stdout is the only source of truth. It writes a report s
 
 | `action` | What you do |
 |----------|-------------|
-| `rewrite` | Continue to Step 2. |
+| `rewrite` | Continue to Step 2. Let `opportunity` set the angle: displace the incumbent, or claim an unowned answer. |
 | `decline` | The brand is already cited. Report that, show the gap table, and stop. Do not rewrite. |
 | `abort` | Evidence is too thin to claim a gap. Report that and stop. Do not rewrite, do not go looking for more evidence. |
 
@@ -64,7 +66,7 @@ Non-negotiable, and each one is machine-checked in Step 3:
 ## Step 3 — Score (one command)
 
 ```bash
-python .agents/skills/geo-citation-engineer/scripts/run_geo.py score --brief demo/input/bible-chat.brief.json
+python .agents/skills/geo-citation-engineer/scripts/run_geo.py score --brief demo/input/stock-estate.brief.json
 ```
 
 Runs deterministic GEO compliance and an offline heuristic RAG-triad judge. No keys, no network.
@@ -82,7 +84,7 @@ Exit codes: `0` pass, `2` scored but failed, `1` could not run (missing file, or
 
 ## Optional — live capture
 
-Only if the user asks and `APIFY_TOKEN` is set. Costs credits and takes 30–90s, so never do this on a demo clock.
+Only if the user asks and `APIFY_TOKEN` is set. **Measured at 1m36s** for one query against `apify/google-search-scraper` — that alone exceeds the 75s demo budget, so never do this on a demo clock. The committed snapshots exist precisely so the demo never needs it.
 
 ```bash
 python .agents/skills/geo-citation-engineer/scripts/apify_fetcher.py \
@@ -90,6 +92,8 @@ python .agents/skills/geo-citation-engineer/scripts/apify_fetcher.py \
 ```
 
 Then point a brief's `snapshot` at that file. Without a token the fetcher exits non-zero and tells you to use a snapshot; that is expected, not an error to work around.
+
+The fetcher normalises what the Actor returns: it trims Google interface chrome from the overview text, resolves `/goto?url=` citation stubs to publisher URLs (keeping `url_raw`), and collapses duplicate related queries. Never hand-edit a snapshot to make a gap look bigger.
 
 ## Reference
 

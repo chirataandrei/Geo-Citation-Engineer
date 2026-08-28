@@ -1,11 +1,11 @@
 {
   "case_id": "thin-evidence",
-  "query": "best bible study app for left-handed theologians",
-  "brand": "Bible Chat",
-  "brand_domain": "thebiblechat.com",
-  "competitor": "YouVersion",
+  "query": "best real estate crowdfunding platform for left-handed investors",
+  "brand": "Stock.estate",
+  "brand_domain": "stock.estate",
+  "competitor": "EstateGuru",
   "snapshot": "demo/input/snapshots/thin-evidence.test.json",
-  "draft": "demo/input/bible-chat.draft.md",
+  "draft": "demo/input/stock-estate.draft.md",
   "brand_facts": {
     "note": "Insufficient-evidence case. The snapshot is a labelled test fixture with one thin source and no AI Overview. The skill must refuse to assert a citation gap instead of inventing one.",
     "source_url": null,
