@@ -1,0 +1,54 @@
+{
+  "team": {
+    "name": "Bible Chat",
+    "members": [
+      {
+        "name": "George Lazureanu",
+        "email": "george.lazureanu@thebiblechat.com"
+      }
+    ]
+  },
+  "track": "Dominate AI search",
+  "problem": "For a keyword that drives revenue, AI search cites a named competitor and never your brand. A content marketer has no repeatable way to prove the gap, or to rewrite a page so it becomes citable without inventing statistics along the way.",
+  "job": "Given one brief, decide whether a real citation gap exists, and if it does, produce a citation-gap report plus one rewritten page section in which every fact traces to a captured evidence field.",
+  "boundary": "Drafts copy only. Does not publish, touch a CMS, do keyword research, cover ChatGPT or Perplexity, or claim the rewrite will earn a citation.",
+  "entry_skill": ".agents/skills/geo-citation-engineer/SKILL.md",
+  "skill_name": "geo-citation-engineer",
+  "seed_prompt": "demo/seed-prompt.md",
+  "input": "demo/input",
+  "output": "demo/output",
+  "evals": "demo/evals.md",
+  "run_sheet": "DEMO.md",
+  "license": "MIT",
+  "credentials_required": false,
+  "network_required": false,
+  "runtime": {
+    "language": "Python 3.11+",
+    "demo_path_dependencies": "standard library only",
+    "measured_plan_seconds": 0.17,
+    "measured_score_seconds": 0.19
+  },
+  "evidence": [
+    {
+      "snapshot": "demo/input/snapshots/best-bible-study-app.2026-08-28.json",
+      "query": "best bible study app",
+      "request_url": "https://www.google.com/search?q=best+bible+study+app&hl=en&gl=us",
+      "retrieved_at": "2026-08-28T15:18:00+00:00",
+      "method": "browser_capture"
+    },
+    {
+      "snapshot": "demo/input/snapshots/best-crm-for-startups.2026-08-28.json",
+      "query": "best crm for startups",
+      "request_url": "https://www.google.com/search?q=best+crm+for+startups&hl=en&gl=us",
+      "retrieved_at": "2026-08-28T15:20:00+00:00",
+      "method": "browser_capture"
+    },
+    {
+      "snapshot": "demo/input/snapshots/thin-evidence.test.json",
+      "query": "best bible study app for left-handed theologians",
+      "request_url": null,
+      "retrieved_at": null,
+      "method": "synthetic_test_fixture"
+    }
+  ]
+}

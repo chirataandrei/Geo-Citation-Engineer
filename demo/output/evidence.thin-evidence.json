@@ -1,0 +1,38 @@
+{
+  "schema_version": "2",
+  "query": "best bible study app for left-handed theologians",
+  "provenance": {
+    "method": "synthetic_test_fixture",
+    "engine": null,
+    "request_url": null,
+    "retrieved_at": null,
+    "captured_by": "Hand-authored test fixture. This file is NOT web evidence and must never be presented as a real capture. It exists to exercise the skill's insufficient-evidence path: no AI Overview, no numeric facts, no reviews, one thin source.",
+    "ai_overview_present": false,
+    "verbatim": false
+  },
+  "ai_overview_text": null,
+  "cited_sources": [
+    {
+      "title": "Bible study apps - overview page",
+      "url": "https://example.org/bible-study-apps",
+      "snippet": "A short directory listing with no comparative detail."
+    }
+  ],
+  "organic": [],
+  "people_also_ask": [],
+  "related_queries": [],
+  "quotes": [],
+  "raw_item_count": 0,
+  "fan_out": [],
+  "brand": "Bible Chat",
+  "competitor": "YouVersion",
+  "brand_mentioned_in_ai": false,
+  "competitor_mentioned_in_ai": false,
+  "gap": "neither brand nor competitor cited",
+  "brand_facts": {
+    "note": "Insufficient-evidence case. The snapshot is a labelled test fixture with one thin source and no AI Overview. The skill must refuse to assert a citation gap instead of inventing one.",
+    "source_url": null,
+    "retrieved_at": null,
+    "claims": []
+  }
+}
