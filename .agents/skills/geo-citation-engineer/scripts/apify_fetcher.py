@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
-"""Fetch Google AI Overview + optional G2 quotes; emit normalized GEO JSON."""
+"""Fetch citation signals: DuckDuckGo HTML (stdlib), optional Apify, or fixtures."""
 
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from datetime import datetime, timezone
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs, unquote, urlencode, urlparse
+from urllib.request import Request, urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -27,6 +31,12 @@ SERP_ACTOR = "apify/google-search-scraper"
 OVERVIEW_ACTOR = "apify/google-ai-overviews-scraper"
 G2_ACTOR = "automation-lab/g2-scraper"
 DEFAULT_WAIT_SECS = 280
+DDG_HTML_URL = "https://html.duckduckgo.com/html/"
+DDG_TIMEOUT_SECS = 8
+DDG_USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+)
 
 
 def _as_list(value: Any) -> list[Any]:
@@ -142,6 +152,9 @@ def attach_mentions(payload: dict[str, Any], brand: str, competitor: str | None)
         *[s.get("title", "") for s in payload.get("cited_sources") or []],
         *[s.get("url", "") for s in payload.get("cited_sources") or []],
         *[s.get("snippet", "") for s in payload.get("cited_sources") or []],
+        *[s.get("title", "") for s in payload.get("organic") or []],
+        *[s.get("url", "") for s in payload.get("organic") or []],
+        *[s.get("snippet", "") for s in payload.get("organic") or []],
     ]
     brand_hit = mentioned(brand, haystacks)
     competitor_hit = mentioned(competitor or "", haystacks) if competitor else False
@@ -274,8 +287,146 @@ def ensure_names_in_offline_overview(payload: dict[str, Any], brand: str, compet
     return adapted
 
 
+def _attr_classes(attrs: list[tuple[str, str | None]]) -> set[str]:
+    raw = dict(attrs).get("class") or ""
+    return {part for part in raw.split() if part}
+
+
+def unwrap_ddg_url(href: str) -> str:
+    href = (href or "").strip()
+    if href.startswith("//"):
+        href = "https:" + href
+    parsed = urlparse(href)
+    encoded = parse_qs(parsed.query).get("uddg") or []
+    if encoded:
+        return unquote(encoded[0])
+    return href
+
+
+class DdgHtmlParser(HTMLParser):
+    """Pull organic title/url/snippet triples from DuckDuckGo HTML. Skip ads."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.results: list[dict[str, str]] = []
+        self._current: dict[str, str] | None = None
+        self._buf: list[str] = []
+        self._in_title = False
+        self._in_snippet = False
+        self._row_ad = False
+        self._ad_stack: list[bool] = []
+
+    def _flush(self) -> None:
+        row = self._current
+        skip = self._row_ad
+        self._current = None
+        self._in_title = False
+        self._in_snippet = False
+        self._buf = []
+        self._row_ad = False
+        if skip or not row:
+            return
+        if not (row.get("title") or row.get("url")):
+            return
+        self.results.append(row)
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        classes = _attr_classes(attrs)
+        href = dict(attrs).get("href") or ""
+        if tag == "div":
+            parent_ad = self._ad_stack[-1] if self._ad_stack else False
+            self._ad_stack.append(parent_ad or "result--ad" in classes)
+        if tag == "a" and "result__a" in classes:
+            self._flush()
+            in_ad = (self._ad_stack[-1] if self._ad_stack else False) or "result--ad" in classes
+            self._row_ad = in_ad
+            self._current = {"title": "", "url": unwrap_ddg_url(href), "snippet": ""}
+            self._in_title = True
+            self._buf = []
+            return
+        if self._current is None:
+            return
+        if "result__snippet" in classes:
+            self._in_snippet = True
+            self._buf = []
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "div" and self._ad_stack:
+            self._ad_stack.pop()
+        if self._in_title and tag == "a" and self._current is not None:
+            self._current["title"] = " ".join(self._buf).strip()
+            self._in_title = False
+            self._buf = []
+            return
+        if self._in_snippet and tag in {"a", "div", "span", "td"} and self._current is not None:
+            self._current["snippet"] = " ".join(self._buf).strip()
+            self._in_snippet = False
+            self._buf = []
+
+    def handle_data(self, data: str) -> None:
+        if self._in_title or self._in_snippet:
+            text = (data or "").strip()
+            if text:
+                self._buf.append(text)
+
+    def close(self) -> None:
+        self._flush()
+        super().close()
+
+
+def parse_ddg_html(html: str) -> list[dict[str, str]]:
+    parser = DdgHtmlParser()
+    parser.feed(html or "")
+    parser.close()
+    return parser.results
+
+
+def fetch_ddg_html(query: str, timeout: float = DDG_TIMEOUT_SECS) -> str:
+    params = urlencode({"q": query})
+    request = Request(
+        f"{DDG_HTML_URL}?{params}",
+        headers={"User-Agent": DDG_USER_AGENT, "Accept": "text/html"},
+        method="GET",
+    )
+    with urlopen(request, timeout=timeout) as response:
+        return response.read().decode("utf-8", errors="replace")
+
+
+def ddg_results_to_serp_item(query: str, results: list[dict[str, str]]) -> dict[str, Any]:
+    organic = [row for row in results if row.get("title") or row.get("url")][:10]
+    snippets = [row["snippet"] for row in organic if row.get("snippet")]
+    titles = [row["title"] for row in organic if row.get("title")]
+    overview = " ".join(snippets[:5]).strip() or " ".join(titles[:3]).strip()
+    related = [title for title in titles[1:6] if title.lower() != query.lower()]
+    paa = [query] if query else []
+    return {
+        "aiOverview": {"text": overview, "sources": organic},
+        "organicResults": organic,
+        "peopleAlsoAsk": paa,
+        "relatedQueries": related,
+    }
+
+
+def build_ddg_payload(query: str, brand: str, competitor: str | None, html: str) -> dict[str, Any] | None:
+    results = parse_ddg_html(html)
+    if not results:
+        return None
+    item = ddg_results_to_serp_item(query, results)
+    payload = build_payload(
+        query=query,
+        brand=brand,
+        competitor=competitor,
+        serp_items=[item],
+        quotes=[],
+        source="duckduckgo-html",
+    )
+    if not payload.get("organic") and not payload.get("ai_overview_text"):
+        return None
+    return payload
+
+
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Fetch GEO citation signals via Apify.")
+    parser = argparse.ArgumentParser(description="Fetch GEO citation signals (DuckDuckGo, Apify, or fixtures).")
     parser.add_argument("--query", required=True, help="Search query / head keyword")
     parser.add_argument("--brand", required=True, help="Brand to look for in AI citations")
     parser.add_argument("--competitor", default=None, help="Optional competitor name")
@@ -285,7 +436,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--offline",
         action="store_true",
-        help="Load fixtures instead of calling Apify",
+        help="Load fixtures instead of the network",
+    )
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        help="Hit Apify Google search / AI Overview (needs APIFY_TOKEN)",
     )
     parser.add_argument(
         "--fixture",
@@ -301,97 +457,134 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main() -> int:
-    load_dotenv()
-    args = parse_args()
+def load_offline_payload(args: argparse.Namespace) -> dict[str, Any]:
+    fixture_path = Path(args.fixture) if args.fixture else fixture_file("serp_sample.json")
+    if args.fixture and not fixture_path.is_file():
+        fixture_path = fixture_file(args.fixture)
+    if not fixture_path.is_file():
+        raise FileNotFoundError(f"offline fixture not found: {fixture_path}")
+    data = read_json(fixture_path)
     quotes: list[dict[str, Any]] = []
-
-    if args.offline:
-        fixture_path = Path(args.fixture) if args.fixture else fixture_file("serp_sample.json")
-        if args.fixture and not fixture_path.is_file():
-            fixture_path = fixture_file(args.fixture)
-        if not fixture_path.is_file():
-            print(f"offline fixture not found: {fixture_path}", file=sys.stderr)
-            return 1
-        data = read_json(fixture_path)
-        if isinstance(data, dict) and "ai_overview_text" in data:
-            payload = dict(data)
-            payload["query"] = args.query or payload.get("query")
-            payload = ensure_names_in_offline_overview(payload, args.brand, args.competitor)
-            payload = attach_mentions(payload, args.brand, args.competitor)
-            payload["source"] = payload.get("source") or "offline-normalized"
-        else:
-            items = data if isinstance(data, list) else [data]
-            payload = build_payload(
-                query=args.query,
-                brand=args.brand,
-                competitor=args.competitor,
-                serp_items=items,
-                quotes=[],
-                source="offline-raw",
-            )
-            payload = ensure_names_in_offline_overview(payload, args.brand, args.competitor)
-            payload = attach_mentions(payload, args.brand, args.competitor)
-        g2_path = Path(args.g2_fixture) if args.g2_fixture else fixture_file("g2_sample.json")
-        if args.g2_fixture and not g2_path.is_file():
-            g2_path = fixture_file(args.g2_fixture)
-        if args.g2_url or args.g2_fixture or g2_path.is_file():
-            if g2_path.is_file():
-                reviews = read_json(g2_path)
-                if isinstance(reviews, list):
-                    quotes = quotes_for_brand(quotes_from_reviews(reviews), args.brand)
-        payload["quotes"] = quotes
-        if args.competitor is not None or "brand" not in payload:
-            payload = attach_mentions(payload, args.brand, args.competitor)
+    if isinstance(data, dict) and "ai_overview_text" in data:
+        payload = dict(data)
+        payload["query"] = args.query or payload.get("query")
+        payload = ensure_names_in_offline_overview(payload, args.brand, args.competitor)
+        payload = attach_mentions(payload, args.brand, args.competitor)
+        payload["source"] = payload.get("source") or "offline-normalized"
     else:
-        load_dotenv()
-        token = __import__("os").environ.get("APIFY_TOKEN", "").strip()
-        if not token:
-            print("APIFY_TOKEN is required for live fetches. Use --offline or set .env.", file=sys.stderr)
-            return 1
-        try:
-            from apify_client import ApifyClient
-        except ImportError:
-            req = skill_dir() / "requirements.txt"
-            print(f"Install dependencies: python3 -m pip install -r {req}", file=sys.stderr)
-            return 1
-        client = ApifyClient(token)
-        try:
-            items = fetch_serp_live(client, args.query, args.country_code, args.language_code)
-        except Exception as exc:  # noqa: BLE001 — surface Actor errors to the agent
-            print(f"google-search-scraper failed: {exc}", file=sys.stderr)
-            items = []
+        items = data if isinstance(data, list) else [data]
         payload = build_payload(
             query=args.query,
             brand=args.brand,
             competitor=args.competitor,
             serp_items=items,
             quotes=[],
-            source="apify/google-search-scraper",
+            source="offline-raw",
         )
-        if not payload.get("ai_overview_text"):
-            try:
-                fallback_items = fetch_overview_fallback(client, args.query)
-            except Exception as exc:  # noqa: BLE001
-                print(f"google-ai-overviews-scraper fallback failed: {exc}", file=sys.stderr)
-                fallback_items = []
-            if fallback_items:
-                payload = build_payload(
-                    query=args.query,
-                    brand=args.brand,
-                    competitor=args.competitor,
-                    serp_items=fallback_items,
-                    quotes=[],
-                    source="apify/google-ai-overviews-scraper",
-                )
-        if args.g2_url:
-            try:
-                reviews = fetch_g2(client, args.g2_url)
+        payload = ensure_names_in_offline_overview(payload, args.brand, args.competitor)
+        payload = attach_mentions(payload, args.brand, args.competitor)
+    g2_path = Path(args.g2_fixture) if args.g2_fixture else fixture_file("g2_sample.json")
+    if args.g2_fixture and not g2_path.is_file():
+        g2_path = fixture_file(args.g2_fixture)
+    if args.g2_url or args.g2_fixture or g2_path.is_file():
+        if g2_path.is_file():
+            reviews = read_json(g2_path)
+            if isinstance(reviews, list):
                 quotes = quotes_for_brand(quotes_from_reviews(reviews), args.brand)
-            except Exception as extra:  # noqa: BLE001
-                print(f"G2 fetch skipped: {extra}", file=sys.stderr)
-                quotes = []
-            payload["quotes"] = quotes
+    payload["quotes"] = quotes
+    if args.competitor is not None or "brand" not in payload:
+        payload = attach_mentions(payload, args.brand, args.competitor)
+    return payload
+
+
+def fetch_apify_payload(args: argparse.Namespace) -> dict[str, Any]:
+    token = os.environ.get("APIFY_TOKEN", "").strip()
+    if not token:
+        raise RuntimeError("APIFY_TOKEN is required for --live. Use default DuckDuckGo, --offline, or set .env.")
+    try:
+        from apify_client import ApifyClient
+    except ImportError as exc:
+        req = skill_dir() / "requirements.txt"
+        raise RuntimeError(f"Install dependencies: python3 -m pip install -r {req}") from exc
+    client = ApifyClient(token)
+    try:
+        items = fetch_serp_live(client, args.query, args.country_code, args.language_code)
+    except Exception as exc:  # noqa: BLE001 — surface Actor errors to the agent
+        print(f"google-search-scraper failed: {exc}", file=sys.stderr)
+        items = []
+    payload = build_payload(
+        query=args.query,
+        brand=args.brand,
+        competitor=args.competitor,
+        serp_items=items,
+        quotes=[],
+        source="apify/google-search-scraper",
+    )
+    if not payload.get("ai_overview_text"):
+        try:
+            fallback_items = fetch_overview_fallback(client, args.query)
+        except Exception as exc:  # noqa: BLE001
+            print(f"google-ai-overviews-scraper fallback failed: {exc}", file=sys.stderr)
+            fallback_items = []
+        if fallback_items:
+            payload = build_payload(
+                query=args.query,
+                brand=args.brand,
+                competitor=args.competitor,
+                serp_items=fallback_items,
+                quotes=[],
+                source="apify/google-ai-overviews-scraper",
+            )
+    if args.g2_url:
+        try:
+            reviews = fetch_g2(client, args.g2_url)
+            payload["quotes"] = quotes_for_brand(quotes_from_reviews(reviews), args.brand)
+        except Exception as extra:  # noqa: BLE001
+            print(f"G2 fetch skipped: {extra}", file=sys.stderr)
+            payload["quotes"] = []
+    return payload
+
+
+def fetch_ddg_payload(args: argparse.Namespace) -> dict[str, Any] | None:
+    try:
+        html = fetch_ddg_html(args.query)
+    except Exception as exc:  # noqa: BLE001 — network/timeout must fall back
+        print(f"DuckDuckGo HTML fetch failed: {exc}", file=sys.stderr)
+        return None
+    payload = build_ddg_payload(args.query, args.brand, args.competitor, html)
+    if payload is None:
+        print("DuckDuckGo HTML returned no organic results.", file=sys.stderr)
+    return payload
+
+
+def main() -> int:
+    load_dotenv()
+    args = parse_args()
+
+    if args.offline:
+        try:
+            payload = load_offline_payload(args)
+        except FileNotFoundError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+    elif args.live:
+        try:
+            payload = fetch_apify_payload(args)
+        except RuntimeError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        if not payload.get("ai_overview_text") and not payload.get("organic"):
+            print("Apify returned no overview; falling back to fixture.", file=sys.stderr)
+            payload = load_offline_payload(args)
+    else:
+        payload = fetch_ddg_payload(args)
+        if payload is None:
+            print("Falling back to offline fixture.", file=sys.stderr)
+            try:
+                payload = load_offline_payload(args)
+            except FileNotFoundError as exc:
+                print(str(exc), file=sys.stderr)
+                return 1
 
     # Keep stdout JSON-only for the agent.
     if not payload.get("ai_overview_text"):
@@ -399,7 +592,7 @@ def main() -> int:
 
     rendered = write_json(payload)
     if args.out:
-        out_path = __import__("pathlib").Path(args.out)
+        out_path = Path(args.out)
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(rendered, encoding="utf-8")
     sys.stdout.write(rendered)

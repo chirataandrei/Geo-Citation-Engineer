@@ -217,7 +217,7 @@ def beat_draft(auto: bool, run: Run) -> str:
     return draft
 
 
-def beat_fetch(auto: bool, live: bool, run: Run) -> dict:
+def beat_fetch(auto: bool, run: Run, *, live: bool = False, offline: bool = False) -> dict:
     print()
     print(bold("  02  THE ENGINE ALREADY PICKED A WINNER"))
     print(dim("  ────────────────────────────────────────"))
@@ -234,19 +234,25 @@ def beat_fetch(auto: bool, live: bool, run: Run) -> dict:
         "--out",
         str(out),
     ]
-    if not live:
+    if offline:
         cmd.insert(0, "--offline")
-        print(dim("  sensor   apify_fetcher.py  ·  fixture (same contract as live)"))
-    else:
+        print(dim("  sensor   apify_fetcher.py  ·  fixture"))
+    elif live:
+        cmd.insert(0, "--live")
         print(dim("  sensor   apify_fetcher.py  ·  live Apify"))
+    else:
+        print(dim("  sensor   apify_fetcher.py  ·  DuckDuckGo HTML (stdlib)"))
     proc = run_script_spin("apify_fetcher.py", cmd, auto, "pulling signal…")
     if proc.returncode != 0:
         print(proc.stderr or proc.stdout)
-        if live:
-            print(dim("  live failed — falling back offline"))
-            return beat_fetch(auto, live=False, run=run)
+        if not offline:
+            print(dim("  live failed — falling back to fixture"))
+            return beat_fetch(auto, run, live=False, offline=True)
         raise SystemExit(proc.returncode)
     payload = json.loads(out.read_text(encoding="utf-8"))
+    source = str(payload.get("source") or "")
+    if source:
+        print(dim(f"  source   {source}"))
     demo_serp = ROOT / "demo" / "output" / "serp.json"
     demo_serp.parent.mkdir(parents=True, exist_ok=True)
     demo_serp.write_text(out.read_text(encoding="utf-8"), encoding="utf-8")
@@ -541,7 +547,8 @@ def write_show(
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="GEO Citation Engineer cinematic demo.")
     parser.add_argument("--auto", action="store_true", help="No Enter between beats.")
-    parser.add_argument("--live", action="store_true", help="Hit Apify instead of fixtures.")
+    parser.add_argument("--live", action="store_true", help="Hit Apify Google AI Overview (needs APIFY_TOKEN).")
+    parser.add_argument("--offline", action="store_true", help="Force bundled SERP fixture.")
     parser.add_argument(
         "--judge",
         default="auto",
@@ -570,7 +577,7 @@ def main() -> int:
     print_banner(run)
     wait(args.auto)
     draft = beat_draft(args.auto, run)
-    payload = beat_fetch(args.auto, live=args.live, run=run)
+    payload = beat_fetch(args.auto, run, live=args.live, offline=args.offline)
     rewrite_body = beat_rewrite(args.auto, run, draft)
     judged = beat_eval(args.auto, judge=judge, run=run)
     (ROOT / "demo" / "output").mkdir(parents=True, exist_ok=True)

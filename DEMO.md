@@ -14,7 +14,7 @@ Query, brand, competitor, and draft come from that file. `python3 demo.py --auto
 | 1:30–2:10 | Four bars + **PASS** + HTML board |
 | 2:10–2:30 | `$geo-citation-engineer` · MIT |
 
-Offline fixture is a sample AI Overview. The requested **competitor** is written into that text if it is missing, so any brand/competitor pair still gets a real GAP stamp. Stats stay from the fixture (not invented). A live SERP for a new query still needs `--live` and `APIFY_TOKEN`.
+Default fetch is **DuckDuckGo HTML** (stdlib, no API key). Overview text is extractive snippets — no invented stats. GAP is scored against that live page. `--offline` forces the bundled fixture (competitor name injected if missing). `--live` is Apify Google AI Overview and needs `APIFY_TOKEN` plus pip.
 
 ## Fallback (live run >60s or fail)
 

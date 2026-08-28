@@ -37,6 +37,37 @@ def test_offline_overview_accepts_any_competitor() -> None:
     assert adapted["gap"] == "competitor cited; brand absent"
 
 
+def test_parse_ddg_html_skips_ads_and_unwraps_urls() -> None:
+    from apify_fetcher import build_ddg_payload, parse_ddg_html
+    from geo_lib import extract_numbers
+
+    html = (ROOT / "fixtures" / "ddg_sample.html").read_text(encoding="utf-8")
+    rows = parse_ddg_html(html)
+    titles = [row["title"] for row in rows]
+    assert "Best seaweed snacks for 2026 | PCMag" in titles
+    assert "Can cats eat seaweed? ASPCA" in titles
+    assert "Buy TidePod LLC now" not in titles
+    pcmag = next(row for row in rows if "PCMag" in row["title"])
+    assert pcmag["url"] == "https://www.pcmag.com/picks/seaweed-snacks"
+    assert "12 brands" in pcmag["snippet"]
+
+    payload = build_ddg_payload(
+        "best seaweed snacks for cats who do yoga",
+        "PlanktonForge",
+        "TidePod LLC",
+        html,
+    )
+    assert payload is not None
+    assert payload["source"] == "duckduckgo-html"
+    overview = payload["ai_overview_text"]
+    assert "Roasted nori sheets" in overview
+    assert "99%" not in overview
+    assert extract_numbers(overview) <= extract_numbers(html.replace("99%", ""))
+    assert payload["brand_mentioned_in_ai"] is False
+    assert payload["competitor_mentioned_in_ai"] is False
+    assert payload["organic"]
+
+
 def test_normalize_raw_serp() -> None:
     raw = read_json(ROOT / "fixtures" / "serp_raw.json")
     payload = build_payload(
@@ -132,7 +163,7 @@ def test_stage_demo_auto_heuristic() -> None:
     import subprocess
 
     result = subprocess.run(
-        [sys.executable, str(ROOT / "demo.py"), "--auto", "--judge", "heuristic", "--no-web"],
+        [sys.executable, str(ROOT / "demo.py"), "--auto", "--judge", "heuristic", "--no-web", "--offline"],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -148,7 +179,7 @@ def test_stage_demo_writes_show_html(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setenv("GEO_DEMO_NO_OPEN", "1")
     result = subprocess.run(
-        [sys.executable, str(ROOT / "demo.py"), "--auto", "--judge", "heuristic", "--web"],
+        [sys.executable, str(ROOT / "demo.py"), "--auto", "--judge", "heuristic", "--web", "--offline"],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -272,6 +303,7 @@ def test_stage_demo_veridion_labels_skip_acme_quote() -> None:
             "--judge",
             "heuristic",
             "--no-web",
+            "--offline",
             "--brand",
             "Veridion",
             "--competitor",

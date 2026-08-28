@@ -2,14 +2,14 @@
 name: geo-citation-engineer
 description: Automates Generative Engine Optimization (GEO). Fetches live AI-search citations via Apify, finds citation gaps vs competitors, and rewrites first-party content with atomic facts, statistics, lists, and customer quotes. Use when the user wants GEO analysis, AI Overview / ChatGPT / Perplexity visibility, citation gap analysis, or to rewrite a page so LLMs cite it.
 license: MIT
-compatibility: Python 3.11+. Offline fetch/eval is stdlib-only. Live Apify and LLM judges need `pip install -r requirements.txt` plus APIFY_TOKEN / GEMINI_API_KEY.
+compatibility: Python 3.11+. DuckDuckGo HTML fetch and offline eval are stdlib-only. Live Apify and LLM judges need `pip install -r requirements.txt` plus APIFY_TOKEN / GEMINI_API_KEY.
 ---
 
 # GEO Citation Engineer
 
 Turn a GTM keyword + brand draft into a citation-gap report and a GEO-rewritten page. Follow this workflow exactly. Do not invent statistics, quotes, or sources.
 
-From this repository root, the 2.5-minute demo is one prompt: paste `demo/seed-prompt.md` and run `python3 demo.py --auto --judge heuristic`. Do not pip install for that path. Do not open script source.
+From this repository root, the 2.5-minute demo is one prompt: paste `demo/seed-prompt.md` and run `python3 demo.py --auto --judge heuristic`. That path uses DuckDuckGo HTML (stdlib) or the fixture. Do not pip install. Do not open script source.
 
 This folder is the whole skill. Copy it onto another machine only if you are installing outside this repo.
 
@@ -100,7 +100,9 @@ python3 scripts/apify_fetcher.py \
 
 Flags:
 
-- `--offline` — use bundled `fixtures/serp_sample.json` (and G2 fixture). Use this if `APIFY_TOKEN` is missing or a live run times out.
+- Default (no extra flag) — DuckDuckGo HTML, stdlib, no token. Falls back to the bundled fixture on timeout or empty results.
+- `--offline` — use bundled `fixtures/serp_sample.json` (and G2 fixture).
+- `--live` — Apify Google search / AI Overview. Needs `APIFY_TOKEN` and `pip install -r requirements.txt`.
 - `--out PATH` — write JSON to disk as well as stdout.
 
 Save the JSON. If the process exits non-zero, show stderr and stop.
@@ -160,4 +162,4 @@ If `groundedness` fails or `geo_compliance.pass` is false:
 
 ## Demo notes
 
-Live path needs `APIFY_TOKEN` and `pip install -r requirements.txt`. If the Actor is slow, rerun the fetcher with `--offline` so the rest of the demo still shows gap JSON, rewrite, and evals.
+Default fetch is DuckDuckGo HTML (no pip). Apify needs `APIFY_TOKEN` and `pip install -r requirements.txt` (`--live`). If the network is slow, rerun with `--offline` so the rest of the demo still shows gap JSON, rewrite, and evals.
