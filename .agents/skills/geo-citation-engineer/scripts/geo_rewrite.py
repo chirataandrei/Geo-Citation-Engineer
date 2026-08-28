@@ -58,7 +58,39 @@ def sourced_stat_sentence(source: dict[str, Any]) -> str | None:
     return cap_sentence(f"{first} appears in the AI Overview.")
 
 
-def rewritten_page(source: dict[str, Any], brand: str, competitor: str | None) -> str:
+def draft_intent_sentence(draft: str, source: dict[str, Any]) -> str | None:
+    """Keep the user's page intent. Drop sentences that invent numbers."""
+    source_numbers = extract_numbers(source_blob(source))
+    heading = None
+    prose = None
+    for raw in (draft or "").splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if line.startswith("#"):
+            if heading is None:
+                heading = line.lstrip("#").strip()
+            continue
+        if prose is None:
+            prose = line
+    for candidate in (heading, prose):
+        if not candidate:
+            continue
+        sentence = (split_sentences(candidate) or [candidate])[0]
+        if extract_numbers(sentence) - source_numbers:
+            continue
+        capped = cap_sentence(sentence)
+        if sentence_word_count(capped) >= 3:
+            return capped
+    return None
+
+
+def rewritten_page(
+    source: dict[str, Any],
+    brand: str,
+    competitor: str | None,
+    draft: str = "",
+) -> str:
     query = str(source.get("query") or "this query")
     gap = str(source.get("gap") or "")
     brand_hit = bool(source.get("brand_mentioned_in_ai"))
@@ -68,6 +100,9 @@ def rewritten_page(source: dict[str, Any], brand: str, competitor: str | None) -
     lines: list[str] = []
 
     lines.append(cap_sentence(f"{brand} is a first-party page for {query}"))
+    intent = draft_intent_sentence(draft, source)
+    if intent:
+        lines.append(intent)
     stat = sourced_stat_sentence(source)
     if stat:
         lines.append(stat)
@@ -127,7 +162,12 @@ def rewritten_page(source: dict[str, Any], brand: str, competitor: str | None) -
     return body
 
 
-def render_report(source: dict[str, Any], brand: str, competitor: str | None) -> str:
+def render_report(
+    source: dict[str, Any],
+    brand: str,
+    competitor: str | None,
+    draft: str = "",
+) -> str:
     query = str(source.get("query") or "")
     gap = str(source.get("gap") or "")
     fetched = str(source.get("fetched_at") or "")
@@ -160,13 +200,15 @@ def render_report(source: dict[str, Any], brand: str, competitor: str | None) ->
     else:
         gap_summary = f"The AI Overview does not cite {brand}."
 
-    body = rewritten_page(source, brand, competitor)
+    body = rewritten_page(source, brand, competitor, draft=draft)
     comp_label = competitor or "—"
     change_rows = [
         f"| Gap verdict | gap | {gap or 'n/a'} |",
         "| Sourced claims | ai_overview_text, cited_sources | Copied; not invented |",
         "| Fan-out H2s | fan_out | PAA and related queries |",
     ]
+    if draft_intent_sentence(draft, source):
+        change_rows.append("| Draft intent | user draft | Capped; unsourced numbers dropped |")
     if quotes_for_brand(source.get("quotes") or [], brand):
         change_rows.append("| G2 quote | quotes | Brand-matched span only |")
     return "\n".join(
@@ -210,7 +252,7 @@ def render_report(source: dict[str, Any], brand: str, competitor: str | None) ->
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Write a GEO report from fetcher JSON.")
     parser.add_argument("--source", required=True, help="Fetcher JSON path")
-    parser.add_argument("--draft", default=None, help="Original draft (unused for facts; kept for the agent)")
+    parser.add_argument("--draft", default=None, help="Original draft (intent kept; numbers only if in JSON)")
     parser.add_argument("--brand", required=True)
     parser.add_argument("--competitor", default=None)
     parser.add_argument("--out", required=True)
@@ -228,12 +270,14 @@ def main() -> int:
     if not isinstance(source, dict):
         print("source JSON must be an object", file=sys.stderr)
         return 1
+    draft_text = ""
     if args.draft:
         draft_path = Path(args.draft)
         if not draft_path.is_file():
             print(f"draft not found: {draft_path}", file=sys.stderr)
             return 1
-    report = render_report(source, args.brand, args.competitor)
+        draft_text = draft_path.read_text(encoding="utf-8")
+    report = render_report(source, args.brand, args.competitor, draft=draft_text)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(report, encoding="utf-8")

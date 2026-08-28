@@ -14,7 +14,7 @@ Query, brand, competitor, and draft come from that file. `python3 demo.py --auto
 | 1:30–2:10 | Four bars + **PASS** + HTML board |
 | 2:10–2:30 | `$geo-citation-engineer` · MIT |
 
-Offline fixture is a CRM AI Overview (HubSpot, 64%). Mentions are scored for **whatever names you pass** against that text. A new query’s real SERP needs `--live` and `APIFY_TOKEN`.
+Offline fixture is a sample AI Overview. The requested **competitor** is written into that text if it is missing, so any brand/competitor pair still gets a real GAP stamp. Stats stay from the fixture (not invented). A live SERP for a new query still needs `--live` and `APIFY_TOKEN`.
 
 ## Fallback (live run >60s or fail)
 

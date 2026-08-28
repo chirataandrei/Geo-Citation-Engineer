@@ -184,9 +184,23 @@ def mentioned(needle: str, haystacks: Iterable[str]) -> bool:
             if negated.search(sentence):
                 continue
             return True
-        compact_needle = re.sub(r"[^a-z0-9]+", "", needle_norm)
-        compact_hay = re.sub(r"[^a-z0-9]+", "", text.lower())
-        if compact_needle and compact_needle in compact_hay and not negated.search(text):
+        hay_tokens = [tok.lower() for tok in re.findall(r"[a-z0-9]+", text.lower())]
+        needle_tokens = [tok.lower() for tok in re.findall(r"[a-z0-9]+", needle_norm)]
+        compact_needle = "".join(needle_tokens)
+        compact_hit = False
+        if compact_needle:
+            for start in range(len(hay_tokens)):
+                acc = ""
+                for tok in hay_tokens[start:]:
+                    acc += tok
+                    if acc == compact_needle:
+                        compact_hit = True
+                        break
+                    if len(acc) > len(compact_needle):
+                        break
+                if compact_hit:
+                    break
+        if compact_hit and not negated.search(text):
             return True
     return False
 
@@ -204,14 +218,13 @@ def gap_verdict(brand: str, competitor: str | None, brand_hit: bool, competitor_
 
 
 def quote_matches_brand(quote: dict[str, Any], brand: str) -> bool:
-    needle = (brand or "").strip().lower()
+    needle = (brand or "").strip()
     if len(needle) < 2:
         return False
     product = str(quote.get("product") or quote.get("productName") or "")
     text = str(quote.get("quote") or quote.get("reviewText") or "")
     reviewer = str(quote.get("reviewer") or quote.get("reviewerName") or "")
-    blob = f"{product} {text} {reviewer}"
-    return needle in blob.lower()
+    return mentioned(needle, [product, text, reviewer])
 
 
 def quotes_for_brand(quotes: Iterable[dict[str, Any]], brand: str) -> list[dict[str, Any]]:

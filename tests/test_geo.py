@@ -20,7 +20,21 @@ def test_mention_and_gap() -> None:
     assert mentioned("HubSpot", ["HubSpot is a frequent pick"])
     assert not mentioned("Acme", ["HubSpot is a frequent pick"])
     assert not mentioned("Acme", ["Acme is not mentioned in this overview."])
+    assert not mentioned("Hub", ["HubSpot is a frequent pick"])
+    assert mentioned("Zoom Info", ["ZoomInfo is a frequent pick"])
     assert gap_verdict("Acme", "HubSpot", False, True) == "competitor cited; brand absent"
+
+
+def test_offline_overview_accepts_any_competitor() -> None:
+    from apify_fetcher import ensure_names_in_offline_overview
+
+    source = read_json(ROOT / "fixtures" / "serp_sample.json")
+    adapted = ensure_names_in_offline_overview(source, "Nimbus", "ZoomInfo")
+    adapted = attach_mentions(adapted, "Nimbus", "ZoomInfo")
+    assert "ZoomInfo" in adapted["ai_overview_text"]
+    assert adapted["competitor_mentioned_in_ai"] is True
+    assert adapted["brand_mentioned_in_ai"] is False
+    assert adapted["gap"] == "competitor cited; brand absent"
 
 
 def test_normalize_raw_serp() -> None:
@@ -231,6 +245,18 @@ def test_geo_rewrite_passes_compliance_for_default_fixture() -> None:
     quotes = quotes_from_reviews(read_json(ROOT / "fixtures" / "g2_sample.json"))
     source = attach_mentions({**source, "quotes": quotes}, "Acme", "HubSpot")
     report = render_report(source, "Acme", "HubSpot")
+    result = evaluate(report, source)
+    assert result["pass"], json.dumps(result, indent=2)
+
+
+def test_geo_rewrite_keeps_draft_intent() -> None:
+    from geo_rewrite import render_report
+
+    source = read_json(ROOT / "fixtures" / "serp_sample.json")
+    source = attach_mentions(source, "Nimbus", "ZoomInfo")
+    draft = "# Nimbus pipeline for seed teams\n\nWe help founders stop living in a spreadsheet."
+    report = render_report(source, "Nimbus", "ZoomInfo", draft=draft)
+    assert "Nimbus pipeline for seed teams" in report
     result = evaluate(report, source)
     assert result["pass"], json.dumps(result, indent=2)
 

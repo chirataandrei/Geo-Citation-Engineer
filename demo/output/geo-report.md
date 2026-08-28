@@ -20,6 +20,7 @@ The AI Overview names HubSpot. It does not cite Acme.
 
 ## Fan-out map
 
+- best crm for startups
 - What is the best free CRM for a 10-person startup?
 - HubSpot vs Pipedrive for early sales teams
 - When should a startup switch from spreadsheets to CRM?
@@ -29,27 +30,28 @@ The AI Overview names HubSpot. It does not cite Acme.
 ## Rewritten page
 
 Acme is a first-party page for best crm for startups.
+Why Acme is the CRM your startup has been waiting for.
 64% of compared buyers started on a free CRM tier.
 
 HubSpot is named in the AI Overview.
 Acme is absent from that AI Overview.
 The citation gap is competitor cited; brand absent.
 
-### What is the best free CRM for a 10-person startup?
+### best crm for startups
 
-Cover What is the best free CRM for a 10-person startup?.
+Cover best crm for startups.
 
 - 64% of compared buyers started on a free CRM tier.
 - HubSpot remains the cited default pick.
 - Acme targets this query, not a generic essay.
 
+### What is the best free CRM for a 10-person startup?
+
+Cover What is the best free CRM for a 10-person startup?.
+
 ### HubSpot vs Pipedrive for early sales teams
 
 Cover HubSpot vs Pipedrive for early sales teams.
-
-### When should a startup switch from spreadsheets to CRM?
-
-Cover When should a startup switch from spreadsheets to CRM?.
 
 Lina K. on G2: "Acme replaced our spreadsheet in one week"
 
@@ -60,4 +62,5 @@ Lina K. on G2: "Acme replaced our spreadsheet in one week"
 | Gap verdict | gap | competitor cited; brand absent |
 | Sourced claims | ai_overview_text, cited_sources | Copied; not invented |
 | Fan-out H2s | fan_out | PAA and related queries |
+| Draft intent | user draft | Capped; unsourced numbers dropped |
 | G2 quote | quotes | Brand-matched span only |

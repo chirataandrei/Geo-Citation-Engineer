@@ -13,6 +13,11 @@
       "evidence": "qualitative; no invented number"
     },
     {
+      "claim": "Why Acme is the CRM your startup has been waiting for.",
+      "supported": true,
+      "evidence": "qualitative; no invented number"
+    },
+    {
       "claim": "64% of compared buyers started on a free CRM tier.",
       "supported": true,
       "evidence": "number in SOURCE_JSON"
@@ -33,9 +38,9 @@
       "evidence": "qualitative; no invented number"
     },
     {
-      "claim": "Cover What is the best free CRM for a 10-person startup?.",
+      "claim": "Cover best crm for startups.",
       "supported": true,
-      "evidence": "number in SOURCE_JSON"
+      "evidence": "qualitative; no invented number"
     },
     {
       "claim": "64% of compared buyers started on a free CRM tier.",
@@ -53,17 +58,12 @@
       "evidence": "qualitative; no invented number"
     },
     {
+      "claim": "Cover What is the best free CRM for a 10-person startup?.",
+      "supported": true,
+      "evidence": "number in SOURCE_JSON"
+    },
+    {
       "claim": "Cover HubSpot vs Pipedrive for early sales teams.",
-      "supported": true,
-      "evidence": "qualitative; no invented number"
-    },
-    {
-      "claim": "Cover When should a startup switch from spreadsheets to CRM?.",
-      "supported": true,
-      "evidence": "qualitative; no invented number"
-    },
-    {
-      "claim": "Lina K.",
       "supported": true,
       "evidence": "qualitative; no invented number"
     }
@@ -72,14 +72,14 @@
   "geo_compliance": {
     "geo_compliance_score": 1.0,
     "pass": true,
-    "sentence_count": 13,
+    "sentence_count": 14,
     "target_length_ratio": 1.0,
     "over_hard_max": [],
     "checks": [
       {
         "name": "sentences_present",
         "pass": true,
-        "detail": "13 prose sentences",
+        "detail": "14 prose sentences",
         "weight": 0.1
       },
       {

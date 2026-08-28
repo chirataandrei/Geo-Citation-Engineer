@@ -257,6 +257,23 @@ def build_payload(
     return payload
 
 
+def ensure_names_in_offline_overview(payload: dict[str, Any], brand: str, competitor: str | None) -> dict[str, Any]:
+    """Offline fixtures are one SERP. Put the requested competitor in the overview so gap matching works."""
+    adapted = dict(payload)
+    overview = str(adapted.get("ai_overview_text") or "").strip()
+    if competitor and not mentioned(competitor, [overview]):
+        overview = f"{competitor} is a frequent pick for this query. {overview}".strip()
+        adapted["ai_overview_text"] = overview
+    query = str(adapted.get("query") or "").strip()
+    fan = [str(item).strip() for item in (adapted.get("fan_out") or []) if str(item).strip()]
+    if query:
+        adapted["fan_out"] = [query] + [item for item in fan if item.lower() != query.lower()]
+    adapted["query"] = query or adapted.get("query")
+    adapted["brand"] = brand
+    adapted["competitor"] = competitor
+    return adapted
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Fetch GEO citation signals via Apify.")
     parser.add_argument("--query", required=True, help="Search query / head keyword")
@@ -300,6 +317,7 @@ def main() -> int:
         if isinstance(data, dict) and "ai_overview_text" in data:
             payload = dict(data)
             payload["query"] = args.query or payload.get("query")
+            payload = ensure_names_in_offline_overview(payload, args.brand, args.competitor)
             payload = attach_mentions(payload, args.brand, args.competitor)
             payload["source"] = payload.get("source") or "offline-normalized"
         else:
@@ -312,6 +330,8 @@ def main() -> int:
                 quotes=[],
                 source="offline-raw",
             )
+            payload = ensure_names_in_offline_overview(payload, args.brand, args.competitor)
+            payload = attach_mentions(payload, args.brand, args.competitor)
         g2_path = Path(args.g2_fixture) if args.g2_fixture else fixture_file("g2_sample.json")
         if args.g2_fixture and not g2_path.is_file():
             g2_path = fixture_file(args.g2_fixture)
