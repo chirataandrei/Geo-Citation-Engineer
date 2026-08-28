@@ -23,7 +23,7 @@ What to show on screen: [DEMO.md](DEMO.md).
 
 ## What it does
 
-1. Fetch live organic results via DuckDuckGo HTML (stdlib). Optional Apify Google AI Overview with a token. If DuckDuckGo is blocked, keep the requested query (empty SERP) instead of swapping in the CRM fixture. `--offline` still uses that fixture.
+1. Fetch live organic results via DuckDuckGo HTML (stdlib). Optional Apify Google AI Overview with a token. If DuckDuckGo is blocked, fall back to Wikipedia search for the product topic, then an empty query-native SERP — never the CRM fixture unless `--offline`.
 2. Stamp the gap: brand cited or not, competitor cited or not.
 3. Rewrite the draft with atomic sentences, sourced stats, lists, and quotes.
 4. Score it: deterministic GEO compliance + heuristic (or LLM) judge.

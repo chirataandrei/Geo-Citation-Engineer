@@ -85,6 +85,34 @@ def test_ddg_anomaly_html_has_no_results() -> None:
     assert "bicycle bells" in payload["ai_overview_text"]
 
 
+def test_search_topic_strips_best_for_clause() -> None:
+    from apify_fetcher import search_topic
+
+    assert search_topic("best thermos flasks for night-shift astronomers") == "thermos flasks"
+    assert search_topic("standing desks") == "standing desks"
+
+
+def test_wikipedia_hits_become_organic_sources() -> None:
+    from apify_fetcher import build_wikipedia_payload
+
+    rows = [
+        {
+            "title": "Vacuum flask",
+            "url": "https://en.wikipedia.org/wiki/Vacuum_flask",
+            "snippet": "A vacuum flask is an insulating storage vessel.",
+        }
+    ]
+    payload = build_wikipedia_payload(
+        "best thermos flasks for night-shift astronomers", "Emberwell", "Hydro Flask", rows
+    )
+    assert payload is not None
+    assert payload["source"] == "wikipedia-search"
+    assert payload["query"] == "best thermos flasks for night-shift astronomers"
+    assert payload["organic"][0]["title"] == "Vacuum flask"
+    assert "HubSpot" not in json.dumps(payload)
+    assert "insulating storage vessel" in payload["ai_overview_text"]
+
+
 def test_normalize_raw_serp() -> None:
     raw = read_json(ROOT / "fixtures" / "serp_raw.json")
     payload = build_payload(

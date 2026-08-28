@@ -4,13 +4,16 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
+import re
 import sys
 from datetime import datetime, timezone
+from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
-from urllib.parse import parse_qs, unquote, urlencode, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlencode, urlparse
 from urllib.request import Request, urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -37,6 +40,25 @@ DDG_USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
 )
+WIKI_API_URL = "https://en.wikipedia.org/w/api.php"
+WIKI_USER_AGENT = "GEOCitationEngineer/1.0 (https://github.com/chirataandrei/Geo-Citation-Engineer)"
+
+
+def search_topic(query: str) -> str:
+    """Turn 'best X for Y' into X so encyclopedia search stays on-product."""
+    raw = (query or "").strip()
+    matched = re.match(r"(?i)^(?:best|top)\s+(.+?)\s+for\s+", raw)
+    if matched:
+        return matched.group(1).strip()
+    return raw
+
+
+def strip_wiki_html(text: str) -> str:
+    return unescape(re.sub(r"<[^>]+>", " ", text or "")).replace("  ", " ").strip()
+
+
+def wiki_page_url(title: str) -> str:
+    return "https://en.wikipedia.org/wiki/" + quote(title.replace(" ", "_"), safe=":_()/")
 
 
 def _as_list(value: Any) -> list[Any]:
@@ -434,6 +456,69 @@ def build_ddg_payload(query: str, brand: str, competitor: str | None, html: str)
     return payload
 
 
+def fetch_wikipedia_search(query: str, timeout: float = DDG_TIMEOUT_SECS) -> list[dict[str, str]]:
+    topic = search_topic(query) or query
+    params = urlencode(
+        {
+            "action": "query",
+            "list": "search",
+            "srsearch": topic,
+            "srlimit": 8,
+            "format": "json",
+            "utf8": 1,
+        }
+    )
+    request = Request(
+        f"{WIKI_API_URL}?{params}",
+        headers={"User-Agent": WIKI_USER_AGENT, "Accept": "application/json"},
+        method="GET",
+    )
+    with urlopen(request, timeout=timeout) as response:
+        data = json.loads(response.read().decode("utf-8", errors="replace"))
+    rows: list[dict[str, str]] = []
+    for hit in (data.get("query") or {}).get("search") or []:
+        title = str(hit.get("title") or "").strip()
+        if not title:
+            continue
+        rows.append(
+            {
+                "title": title,
+                "url": wiki_page_url(title),
+                "snippet": strip_wiki_html(str(hit.get("snippet") or "")),
+            }
+        )
+    return rows
+
+
+def build_wikipedia_payload(query: str, brand: str, competitor: str | None, rows: list[dict[str, str]]) -> dict[str, Any] | None:
+    if not rows:
+        return None
+    item = ddg_results_to_serp_item(query, rows)
+    payload = build_payload(
+        query=query,
+        brand=brand,
+        competitor=competitor,
+        serp_items=[item],
+        quotes=[],
+        source="wikipedia-search",
+    )
+    if not payload.get("organic") and not payload.get("ai_overview_text"):
+        return None
+    return payload
+
+
+def fetch_wikipedia_payload(args: argparse.Namespace) -> dict[str, Any] | None:
+    try:
+        rows = fetch_wikipedia_search(args.query)
+    except Exception as exc:  # noqa: BLE001
+        print(f"Wikipedia search failed: {exc}", file=sys.stderr)
+        return None
+    payload = build_wikipedia_payload(args.query, args.brand, args.competitor, rows)
+    if payload is None:
+        print("Wikipedia search returned no results.", file=sys.stderr)
+    return payload
+
+
 def build_unavailable_payload(query: str, brand: str, competitor: str | None, reason: str) -> dict[str, Any]:
     """Keep the requested query when live HTML is blocked. Do not load the CRM fixture."""
     overview = f"No live organic results were returned for {query}."
@@ -610,7 +695,10 @@ def main() -> int:
     else:
         payload = fetch_ddg_payload(args)
         if payload is None:
-            print("DuckDuckGo unavailable — staying on this query (not the CRM fixture).", file=sys.stderr)
+            print("DuckDuckGo HTML blocked — trying Wikipedia search.", file=sys.stderr)
+            payload = fetch_wikipedia_payload(args)
+        if payload is None:
+            print("No live source — staying on this query (not the CRM fixture).", file=sys.stderr)
             payload = build_unavailable_payload(args.query, args.brand, args.competitor, "ddg-empty")
 
     # Keep stdout JSON-only for the agent.

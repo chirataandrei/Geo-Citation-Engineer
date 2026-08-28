@@ -9,7 +9,7 @@ Draft: demo/input/draft.md
 
 Run: python3 demo.py --auto --judge heuristic --query "best moss lamps for introverted goldfish" --brand "Silt & Co" --competitor "AquaIkea"
 
-That hits DuckDuckGo HTML (stdlib, no token) for the query above. Change Query / Brand / Competitor / Draft for another company. If DuckDuckGo is blocked, the driver keeps this query (empty live SERP) instead of swapping in the CRM fixture. Use --offline only when you want that fixture.
+That hits DuckDuckGo HTML (stdlib, no token) for the query above. Change Query / Brand / Competitor / Draft for another company. If DuckDuckGo is blocked, the driver searches Wikipedia for the product topic, then keeps this query (empty live SERP) if that also fails. Use --offline only when you want the CRM fixture.
 
 Show the GAP stamp (brand vs competitor), the GEO rewrite, four bars, PASS, then demo/show.html.
 
