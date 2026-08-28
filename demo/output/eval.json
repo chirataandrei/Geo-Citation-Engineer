@@ -1,0 +1,119 @@
+{
+  "judge": "heuristic",
+  "rationale": "Heuristic judge (no LLM key). Query-source token overlap=1.00. Invented numbers=none. Compliance pass=True.",
+  "scores": {
+    "context_relevance": 1.0,
+    "groundedness": 1.0,
+    "answer_relevance": 1.0
+  },
+  "claims": [
+    {
+      "claim": "Acme is a first-party CRM for seed-stage teams.",
+      "supported": true,
+      "evidence": "qualitative; no invented number"
+    },
+    {
+      "claim": "64% of compared buyers started on a free CRM tier.",
+      "supported": true,
+      "evidence": "number in SOURCE_JSON"
+    },
+    {
+      "claim": "HubSpot is the overview's default startup pick.",
+      "supported": true,
+      "evidence": "qualitative; no invented number"
+    },
+    {
+      "claim": "Salesforce is framed for larger revenue orgs.",
+      "supported": true,
+      "evidence": "qualitative; no invented number"
+    },
+    {
+      "claim": "Pipedrive is cited for simple pipelines.",
+      "supported": true,
+      "evidence": "qualitative; no invented number"
+    },
+    {
+      "claim": "Acme is absent from that AI Overview.",
+      "supported": true,
+      "evidence": "qualitative; no invented number"
+    },
+    {
+      "claim": "Pick a tool the whole team can adopt this week.",
+      "supported": true,
+      "evidence": "qualitative; no invented number"
+    },
+    {
+      "claim": "Acme replaced our spreadsheet in one week.",
+      "supported": true,
+      "evidence": "qualitative; no invented number"
+    },
+    {
+      "claim": "Free-tier entry is the pattern 64% of buyers followed.",
+      "supported": true,
+      "evidence": "number in SOURCE_JSON"
+    },
+    {
+      "claim": "Acme targets a 10-person sales pod, not an enterprise suite.",
+      "supported": true,
+      "evidence": "number in SOURCE_JSON"
+    },
+    {
+      "claim": "HubSpot remains the cited two-user free option.",
+      "supported": true,
+      "evidence": "qualitative; no invented number"
+    },
+    {
+      "claim": "HubSpot is cited for a generous free CRM.",
+      "supported": true,
+      "evidence": "qualitative; no invented number"
+    }
+  ],
+  "pass": true,
+  "geo_compliance": {
+    "geo_compliance_score": 1.0,
+    "pass": true,
+    "sentence_count": 18,
+    "target_length_ratio": 1.0,
+    "over_hard_max": [],
+    "checks": [
+      {
+        "name": "sentences_present",
+        "pass": true,
+        "detail": "18 prose sentences",
+        "weight": 0.1
+      },
+      {
+        "name": "target_sentence_length",
+        "pass": true,
+        "detail": "100% of sentences have <= 15 words",
+        "weight": 0.3
+      },
+      {
+        "name": "no_overlong_sentence",
+        "pass": true,
+        "detail": "none",
+        "weight": 0.25
+      },
+      {
+        "name": "list_structure",
+        "pass": true,
+        "detail": "found a markdown list",
+        "weight": 0.15
+      },
+      {
+        "name": "sourced_statistic",
+        "pass": true,
+        "detail": "shared=['10', '64'] invented=[]",
+        "weight": 0.15
+      },
+      {
+        "name": "quote_present",
+        "pass": true,
+        "detail": "1 quoted span(s)",
+        "weight": 0.05
+      }
+    ]
+  },
+  "pairwise": null,
+  "invented_numbers": []
+}

@@ -462,6 +462,9 @@ def render_show_html(payload: dict, judged: dict, draft: str, rewrite_body: str)
 
 def write_show(payload: dict, judged: dict, draft: str, rewrite_body: str, open_browser: bool) -> bool:
     SHOW_PATH.write_text(render_show_html(payload, judged, draft, rewrite_body), encoding="utf-8")
+    fallback = ROOT / "demo" / "output" / "show.html"
+    fallback.parent.mkdir(parents=True, exist_ok=True)
+    fallback.write_text(SHOW_PATH.read_text(encoding="utf-8"), encoding="utf-8")
     if not open_browser:
         return False
     if os.environ.get("GEO_DEMO_NO_OPEN"):
@@ -486,25 +489,11 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-CODEX_PROMPT = f"""$geo-citation-engineer
-
-Query: {QUERY}
-Brand: {BRAND}
-Competitor: {COMPETITOR}
-Draft: demo/input/draft.md
-
-This is a 2.5 minute demo. Do not open Python source.
-1. Run python demo.py
-2. Show the GAP stamp, then the GEO page, then PASS.
-3. Glance at demo/show.html on the second screen.
-"""
-
-
 def main() -> int:
     load_dotenv()
     args = parse_args()
     if args.print_prompt:
-        sys.stdout.write(CODEX_PROMPT)
+        sys.stdout.write((ROOT / "demo" / "seed-prompt.md").read_text(encoding="utf-8"))
         return 0
 
     judge = select_judge_provider(args.judge)
@@ -514,6 +503,10 @@ def main() -> int:
     payload = beat_fetch(args.auto, live=args.live)
     rewrite_body = beat_rewrite(args.auto)
     judged = beat_eval(args.auto, judge=judge)
+    (ROOT / "demo" / "output").mkdir(parents=True, exist_ok=True)
+    (ROOT / "demo" / "output" / "eval.json").write_text(
+        json.dumps(judged, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
     if args.web:
         write_show(payload, judged, draft, rewrite_body, open_browser=True)
     beat_close(bool(judged.get("pass")), args.web)

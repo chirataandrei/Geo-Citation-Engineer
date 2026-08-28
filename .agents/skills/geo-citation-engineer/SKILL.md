@@ -9,7 +9,9 @@ compatibility: Python 3.11+. Offline fetch/eval is stdlib-only. Live Apify and L
 
 Turn a GTM keyword + brand draft into a citation-gap report and a GEO-rewritten page. Follow this workflow exactly. Do not invent statistics, quotes, or sources.
 
-This folder is the whole skill. Copy it onto a clean machine and run the scripts from here. Do not assume a git checkout of the demo repo.
+From this repository root, the 2.5-minute demo is one prompt: paste `demo/seed-prompt.md` and run `python3 demo.py --auto --judge heuristic`. Do not pip install for that path. Do not open script source.
+
+This folder is the whole skill. Copy it onto another machine only if you are installing outside this repo.
 
 ## Install (clean environment)
 
@@ -49,7 +51,7 @@ cp .env.example .env
 
 `.env` is read from the working directory, this skill folder, or a parent folder.
 
-For the 2.5-minute stage demo from the Skillathon repo root, execute `python demo.py` (Enter between beats) or `python demo.py --auto`. Do not open script source.
+For the 2.5-minute stage demo from the Skillathon repo root, paste `demo/seed-prompt.md` into Codex. That prompt runs `python3 demo.py --auto --judge heuristic`. Do not open script source.
 
 ## Checklist
 

@@ -9,28 +9,13 @@ Submission manifest: [submission.json](submission.json). Stage run sheet: [DEMO.
 
 ## Demo (the 2.5-minute slot)
 
-From the repo root, venv on:
+The judged path is one paste: [demo/seed-prompt.md](demo/seed-prompt.md) into Codex. That runs:
 
 ```bash
-source .venv/bin/activate
-python demo.py
+python3 demo.py --auto --judge heuristic
 ```
 
-Press **Enter** between beats. Judges see four screens only: losing draft → AI Overview gap → GEO rewrite → eval scorecard (`pass=true`).
-
-Hands-free run-through:
-
-```bash
-python demo.py --auto
-```
-
-Live Apify (needs `APIFY_TOKEN`):
-
-```bash
-python demo.py --live
-```
-
-Paste into Codex: `fixtures/demo_prompt.txt`, or `python demo.py --print-prompt`.
+No venv, no pip, no API keys. Fallback if it fails: [demo/output/show.html](demo/output/show.html) and [demo/output/geo-report.md](demo/output/geo-report.md). Run sheet: [DEMO.md](DEMO.md).
 
 ## What it does
 
