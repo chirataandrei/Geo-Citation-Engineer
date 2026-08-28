@@ -19,10 +19,18 @@ Paste [demo/seed-prompt.md](demo/seed-prompt.md) into Codex, or run the stage dr
 python demo.py
 ```
 
-Press Enter between beats. Hands-free:
+Press Enter between beats. The last beat writes [demo/show.html](demo/show.html) and opens it — glance at that board on the second screen.
+
+Hands-free:
 
 ```bash
 python demo.py --auto --judge gemini
+```
+
+CI / no browser:
+
+```bash
+python demo.py --auto --judge heuristic --no-web
 ```
 
 If Apify is slow, do **not** pass `--live`. Offline fixtures use the same JSON contract.
@@ -32,10 +40,10 @@ If Apify is slow, do **not** pass `--live`. Offline fixtures use the same JSON c
 | Time | Show | File |
 | --- | --- | --- |
 | 0:00–0:20 | Problem: AI Overviews cite HubSpot, not Acme | speak |
-| 0:20–0:40 | Losing GTM copy | [demo/input/draft.md](demo/input/draft.md) |
-| 0:40–1:20 | Live/offline gap: `competitor cited; brand absent` | fetcher / `demo.py` beat 2 |
+| 0:20–0:40 | Losing GTM copy (INVISIBLE) | [demo/input/draft.md](demo/input/draft.md) |
+| 0:40–1:20 | GAP stamp: Acme not cited, HubSpot cited | fetcher / `demo.py` beat 2 |
 | 1:20–1:50 | GEO rewrite (atomic sentences, 64%, list, G2 quote) | [demo/output/geo-report.md](demo/output/geo-report.md) |
-| 1:50–2:25 | Eval scorecard `pass=true` | [demo/evals.md](demo/evals.md) |
+| 1:50–2:25 | Four score bars + PASS, then the HTML board | [demo/show.html](demo/show.html) |
 | 2:25–2:30 | `$geo-citation-engineer` · MIT · forkable | close |
 
 ## Do not
@@ -46,4 +54,4 @@ If Apify is slow, do **not** pass `--live`. Offline fixtures use the same JSON c
 
 ## Success criteria
 
-Judges see three numbers: citation **gap**, `geo_compliance_score`, `groundedness`, all on a passing rewrite.
+Judges see the citation **gap**, four full bars, **PASS**, and the dark HTML board with current page vs GEO page.

@@ -118,7 +118,7 @@ def test_stage_demo_auto_heuristic() -> None:
     import subprocess
 
     result = subprocess.run(
-        [sys.executable, str(ROOT / "demo.py"), "--auto", "--judge", "heuristic"],
+        [sys.executable, str(ROOT / "demo.py"), "--auto", "--judge", "heuristic", "--no-web"],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -127,3 +127,20 @@ def test_stage_demo_auto_heuristic() -> None:
     assert result.returncode == 0, result.stderr + result.stdout
     assert "GAP" in result.stdout
     assert "PASS" in result.stdout
+
+
+def test_stage_demo_writes_show_html(monkeypatch: pytest.MonkeyPatch) -> None:
+    import subprocess
+
+    monkeypatch.setenv("GEO_DEMO_NO_OPEN", "1")
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "demo.py"), "--auto", "--judge", "heuristic", "--web"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr + result.stdout
+    board = (ROOT / "demo" / "show.html").read_text(encoding="utf-8")
+    assert "competitor cited" in board
+    assert "PASS" in board
