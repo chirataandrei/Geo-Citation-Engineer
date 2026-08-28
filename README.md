@@ -1,146 +1,38 @@
 # GEO Citation Engineer
 
-Reusable [Agent Skill](https://agentskills.io/specification) for Generative Engine Optimization (GEO). A coding agent fetches live Google AI Overview citations via [Apify](https://apify.com), finds when a competitor is cited and your brand is not, rewrites first-party copy with atomic facts, then proves the rewrite with evals.
+Agent skill for [Generative Engine Optimization](https://agentskills.io/specification). It finds when Google AI Overviews cite a competitor and not your brand, rewrites first-party copy so models can quote it, and proves the rewrite with evals.
 
-Built for the Formidable Builders GTM Skillathon (Codex + Apify). MIT licensed.
+Track: **ai-search-optimization**. MIT.
 
-Submission manifest: [submission.json](submission.json). Stage run sheet: [DEMO.md](DEMO.md).
+## Demo
 
-
-## Demo (the 2.5-minute slot)
-
-The judged path is one paste: [demo/seed-prompt.md](demo/seed-prompt.md) into Codex. That runs:
+Paste [demo/seed-prompt.md](demo/seed-prompt.md) into Codex. That is the whole run.
 
 ```bash
 python3 demo.py --auto --judge heuristic
 ```
 
-No venv, no pip, no API keys. Fallback if it fails: [demo/output/show.html](demo/output/show.html) and [demo/output/geo-report.md](demo/output/geo-report.md). Run sheet: [DEMO.md](DEMO.md).
+No venv, no pip, no API keys. Python 3 is enough.
+
+If the live run fails or takes more than 60 seconds, open:
+
+- [demo/output/show.html](demo/output/show.html)
+- [demo/output/geo-report.md](demo/output/geo-report.md)
+
+What to show on screen: [DEMO.md](DEMO.md).
 
 ## What it does
 
-1. Pull Google AI Overview + SERP context (`apify/google-search-scraper`).
-2. Detect citation gaps with local brand/competitor matching (no Link-prospecting add-on).
-3. Optionally pull high-NPS G2 quotes (`automation-lab/g2-scraper`).
-4. Rewrite the draft using GEO rules (short sentences, sourced stats, lists, quotes).
-5. Score the result: deterministic GEO compliance + RAG-triad judge.
+1. Fetch Google AI Overview citations (`apify/google-search-scraper`), or bundled fixtures when there is no token.
+2. Stamp the gap: brand cited or not, competitor cited or not.
+3. Rewrite the draft with atomic sentences, sourced stats, lists, and quotes.
+4. Score it: deterministic GEO compliance + heuristic (or LLM) judge.
 
-## Layout
+## Skill
 
-```
-.agents/skills/geo-citation-engineer/   portable skill (copy this folder)
-  SKILL.md
-  requirements.txt                      live Apify + LLM judges
-  fixtures/                             offline SERP, G2, draft, rewrite
-  scripts/                              execute these; do not load them into context
-  references/geo_rules.md
-  assets/geo_report_template.md
-fixtures/                               same samples at repo root for tests
-```
+The portable skill is [`.agents/skills/geo-citation-engineer/`](.agents/skills/geo-citation-engineer/). Codex loads it from this repo. Copy that folder to `$HOME/.agents/skills/` only if you want it on another machine.
 
-## Setup (clean machine)
-
-Python 3.11+. From a clone of this repo:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python3 -m pip install -r requirements.txt
-cp .env.example .env
-# set APIFY_TOKEN for live fetches; optional GEMINI_API_KEY for the judge
-python demo.py --auto --judge heuristic --no-web
-```
-
-Offline fetch/eval needs **no pip packages** — only Python 3.11+.
-
-The skill folder is self-contained. Install it on another agent without the rest of the repo:
-
-```bash
-# Codex (user scope)
-cp -R .agents/skills/geo-citation-engineer "$HOME/.agents/skills/geo-citation-engineer"
-cd "$HOME/.agents/skills/geo-citation-engineer"
-python3 scripts/apify_fetcher.py --offline --query "best crm for startups" --brand Acme --competitor HubSpot
-
-# Live Apify / LLM judge on that machine
-python3 -m pip install -r requirements.txt
-cp .env.example .env
-
-# Claude Code
-cp -R .agents/skills/geo-citation-engineer ".claude/skills/geo-citation-engineer"
-```
-
-Codex loads skills from `.agents/skills` in this repo automatically.
-
-## Run (offline demo — no Apify credits)
-
-From the repository root:
-
-```bash
-python .agents/skills/geo-citation-engineer/scripts/apify_fetcher.py \
-  --offline \
-  --query "best crm for startups" \
-  --brand "Acme" \
-  --competitor "HubSpot" \
-  --out output/serp.json
-
-python .agents/skills/geo-citation-engineer/scripts/geo_compliance.py \
-  --rewrite fixtures/rewrite.md \
-  --source output/serp.json
-
-python .agents/skills/geo-citation-engineer/scripts/eval_judge.py \
-  --offline \
-  --query "best crm for startups" \
-  --rewrite fixtures/rewrite.md \
-  --source output/serp.json \
-  --original-draft fixtures/draft.md
-```
-
-`eval_judge.py` picks a judge in this order: Anthropic (`ANTHROPIC_API_KEY`), Gemini (`GEMINI_API_KEY` or `GOOGLE_API_KEY`), OpenAI (`OPENAI_API_KEY`), else heuristic. Force Gemini with `--judge gemini`. `--offline` skips paid APIs.
-
-Gemini key: create one at [Google AI Studio](https://aistudio.google.com/api-keys), then:
-
-```bash
-echo 'GEMINI_API_KEY=your-key' >> .env
-python .agents/skills/geo-citation-engineer/scripts/eval_judge.py \
-  --judge gemini \
-  --query "best crm for startups" \
-  --rewrite fixtures/rewrite.md \
-  --source output/serp.json \
-  --original-draft fixtures/draft.md
-```
-
-## Live fetch
-
-```bash
-python .agents/skills/geo-citation-engineer/scripts/apify_fetcher.py \
-  --query "best crm for startups" \
-  --brand "Acme" \
-  --competitor "HubSpot" \
-  --g2-url "https://www.g2.com/products/acme/reviews" \
-  --out output/serp.json
-```
-
-Default Actors: `apify/google-search-scraper` with `aiOverview.scrapeFullAiOverview`, `maxPagesPerQuery=1`. If no overview text is returned, the fetcher falls back to `apify/google-ai-overviews-scraper`. G2 failures are non-fatal.
-
-ChatGPT / Perplexity / Gemini add-ons and Link prospecting stay off (pay-per-event). Fan-out is `peopleAlsoAsk` + `relatedQueries`. Brand mention flags are computed locally.
-
-`fixtures/serp_raw.json` follows the official `apify/google-search-scraper` item shape (AI Overview, organic, PAA). Re-record a live fixture anytime with a token:
-
-```bash
-python .agents/skills/geo-citation-engineer/scripts/apify_fetcher.py \
-  --query "best crm for startups" --brand "Acme" --competitor "HubSpot" \
-  --out fixtures/serp_live.json
-```
-
-## Invoke the skill
-
-In Codex: paste `fixtures/demo_prompt.txt`, or type `$geo-citation-engineer`. The skill body is the workflow; `python demo.py` is the stage path.
-
-## Tests
-
-```bash
-python -m pytest -q
-```
+Live Apify / Gemini are optional and not used on the jury laptop. See the skill `requirements.txt` and `.env.example` if you run that path later.
 
 ## License
 
